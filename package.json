@@ -1,0 +1,36 @@
+{
+  "name": "healthcare",
+  "version": "1.0.0",
+  "description": "Du_doan_benh_dua_tren_trieu_chung",
+  "keywords": [
+    "health_care",
+    "health",
+    "trieu_chung",
+    "benh",
+    "chan_doan"
+  ],
+  "homepage": "https://github.com/Datkewww123/health-diagnosis-Backend#readme",
+  "bugs": {
+    "url": "https://github.com/Datkewww123/health-diagnosis-Backend/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Datkewww123/health-diagnosis-Backend.git"
+  },
+  "license": "ISC",
+  "author": "Dat, Khanh",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon ./src/index.js",
+    "dev": "nodemon src/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "mongoose": "^8.20.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.11"
+  }
+}
