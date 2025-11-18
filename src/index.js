@@ -1,16 +1,16 @@
-const express = require('express'); //import thu vien 
-const connectDB = require('./config/database')
-const app = express(); // tao ung dung express
-app.use(express.json()) // cho phep express tu dong paste du lieu json
-const port = 3001
-//connect mongoDB
+const express = require('express'); // su dung framework express
+const connectDB = require('./config/database'); //import ham ket noi mongodb
+const authRoutes = require('./routes/auth'); // import auth tu router
+const cors = require('cors'); //cho phép FE truy cập API từ domain khác.
+
+const app = express(); // tao 1 app chay tren framework express
 connectDB();
 
-// cai path cua URL, function
-app.get('/', (req, res) =>{
-    res.send('home')
-});
+app.use(cors()); // cho phep fe ket noi tu bat cu dau (domain khac)
+app.use(express.json());
+app.use('/api/auth', authRoutes); // dung router cho api
 
-app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`)
-})
+app.get('/', (req, res) => res.send('Home Page'));
+
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, '0.0.0.0', () => console.log(`Server running on port ${PORT}`));
