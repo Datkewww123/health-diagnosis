@@ -46,8 +46,10 @@ async login (req, res){
             return res.json({message:"Incorrect password!"});
         }
         const token = jwt.sign( // tao JWT token
-            {id: user._id}, // token chua id cua user
-            "SECRET_KEY", //khoa ky token
+            {id: user._id,
+              role: user.role
+            }, // token chua id cua user
+            "SECRET KEY", //khoa ky token
             {expiresIn: "1d"} //het han sau 1 ngay
         );
         return res.json({token}); // tra token ve cho fe
@@ -56,6 +58,9 @@ catch(err){
     return res.json({message:"Server Error", Error: err});
 }
 }
+//forgot password
+  
+
 }
 
 module.exports = new AuthController(); // cho phep import model nay vao file khac

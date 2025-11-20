@@ -6,7 +6,8 @@ const userSchema = new mongoose.Schema({ //tao doi tuong Schema
   Username: { type: String, required: true, unique: true },
   phone: { type: String },
   email: { type: String, required: true, unique: true },
-  password: { type: String, required: true }
+  password: { type: String, required: true },
+  role: { type: String, enum: ["user", "admin"], default: "user" }
 }, 
 { timestamps: true }); // co dong nay thi mongodb se tu tao 2 dong o duoi
 // createAt
