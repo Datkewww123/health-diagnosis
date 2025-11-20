@@ -1,4 +1,6 @@
+const path = require('path');
 const express = require('express'); // su dung framework express
+require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 const connectDB = require('./config/database'); //import ham ket noi mongodb
 const authRoutes = require('./routes/auth'); // import auth tu router
 const cors = require('cors'); //cho phép FE truy cập API từ domain khác.
