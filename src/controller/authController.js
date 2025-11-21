@@ -1,9 +1,27 @@
 const User = require('../model/user'); //save user into database
 const bcrypt = require('bcrypt'); // su dung thu vien bcrypt de ma hoa mat khau
 const jwt = require('jsonwebtoken'); //tao token sau khi login
+const nodemailer = require('nodemailer');//
 
+// --- SỬA ĐOẠN NÀY ---
+// 1. Khai báo email và pass ra biến riêng để dễ kiểm soát
+const MY_EMAIL = 'nguyendatz567@gmail.com';
+const MY_PASS = 'jfdz zcfn vjsv sjfc'; // Mật khẩu ứng dụng 16 ký tự của bạn
 
+// 2. In ra terminal để chắc chắn nó không bị rỗng (Debug)
+console.log(">>> CHECK EMAIL CREDENTIALS:");
+console.log("Email:", MY_EMAIL);
+console.log("Pass:", MY_PASS ? "Da co password" : "Thieu password!");
+
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: MY_EMAIL,
+    pass: MY_PASS 
+  }
+});
 class AuthController{
+  //signup
     async signup (req,res) { // lay du lieu nguoi dung gui len 
     try {
       const { First_name, Last_name, Username, phone, email, password, confirm_password } = req.body;
@@ -31,8 +49,6 @@ class AuthController{
     }
 }
 
-
-
 //Login
 async login (req, res){
     try{
@@ -46,7 +62,7 @@ async login (req, res){
             return res.json({message:"Incorrect password!"});
         }
         const token = jwt.sign( // tao JWT token
-            {id: user._id,
+            {userId: user._id,
               role: user.role
             }, // token chua id cua user
             "SECRET KEY", //khoa ky token
@@ -58,9 +74,109 @@ catch(err){
     return res.json({message:"Server Error", Error: err});
 }
 }
-//forgot password
-  
+//logout
+  async logout (req, res){
+    res.status(200).json({message:'Logout successful!'});
+  }
+async forgotpassword(req, res) {
+    try {
+      const { email } = req.body;
+      console.log("1. Nhận request cho email:", email);
+
+      const user = await User.findOne({ email });
+      
+      // Nếu không tìm thấy user
+      if (!user) {
+        return res.status(404).json({ message: 'Email không tồn tại!' });
+      }
+
+      // Tao va luu OTP
+      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+      user.otp = otp;
+      user.otpExpires = Date.now() + 10 * 60 * 1000; 
+      await user.save();
+      // Bước 1: Trả lời Frontend NGAY LẬP TỨC (để nó chuyển trang nhập OTP luôn)
+      res.status(200).json({ 
+          message: 'Đã gửi mail thành công! Vui lòng kiểm tra hòm thư.' 
+      });
+      const mailOptions = {
+        from: '"Health Care Support" <nguyendatz567@gmail.com>',
+        to: email,
+        subject: 'Mã xác thực để lấy lại mật khẩu',
+        text: `Mã OTP của bạn là: ${otp}. Mã này có hiệu lực trong 10 phút`
+      };
+
+        transporter.sendMail(mailOptions).catch((err) => {
+           // Có thể ghi log lỗi vào file nếu cần, hiện tại để trống để không hiện terminal
+      });
+    } 
+    catch (err) {
+      // Chỉ bắt lỗi nếu chưa kịp trả lời Frontend
+      if (!res.headersSent) {
+          res.status(500).json({ message: err.message });
+      }
+    }
+  };
+  //Verify OTP
+  async verifyOtp(req, res){
+    try{
+      const{email, otp} = req.body;
+      const user = await User.findOne({email});
+      if(!user){
+        return res.status(404).json({message:'User không tồn tại!'});
+      }
+      if(user.otp !== otp){
+        return res.status(400).json({message:'Mã OTP không chính xác!'})
+      }
+      if(user.otpExpires < Date.now()){
+        return res.status(400).json({message:'Mã OTP đã hết hiệu lục'});
+      }
+      res.json({message:'Xác thực OTP thành công, bạn có thể đặt lại mật khẩu'});
+    }
+    catch(err){
+      return res.status(500).json({message: err.message});
+    }
+  };
+// Reset password
+async resetPassword(req, res){
+  try{
+    const { email, otp, newPassword} = req.body;
+    const user = await User.findOne({email});
+    if(!user){
+      return res.status(404).json({message:'User không tồn tại!'});
+    }
+    if(user.otp !== otp){
+      return res.status(404).json({message:'Mã OTP không chính xác!'});
+    }
+    if( user.otpExpires < Date.now()){
+      return res.status(404).json({message:'Mã OTP đã hết hạn'})
+    }
+    // ma hoa mat khau moi
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(newPassword, salt);
+    user.otp = undefined;
+    user.otpExpires = undefined;
+    await user.save();
+    res.json({message:'Đổi mật khẩu thành công! Vui lòng đăng nhập lại'});
+  }
+  catch(err){
+    return res.status(500).json({message: err.message});
+  }
+};
+// lay thong tin user hien tại
+async getuser(req, res){
+  try{
+  const user = await User.findById(req.user.userId).select('-password -otp -otpExpires');//hide password and otp
+  if(!user){
+    return res.status(404).json({message:'User không tồn tại!'});
+  }
+  res.json(user);
 
 }
+catch(err){
+  return res.status(500).json({message: err.message});
+}
+
+};}
 
 module.exports = new AuthController(); // cho phep import model nay vao file khac
