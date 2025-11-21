@@ -7,7 +7,9 @@ const userSchema = new mongoose.Schema({ //tao doi tuong Schema
   phone: { type: String },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
-  role: { type: String, enum: ["user", "admin"], default: "user" }
+  role: { type: String, enum: ["user", "admin"], default: "user" },
+  otp: { type: String }, // Lưu mã OTP 6 số
+    otpExpires: { type: Date },
 }, 
 { timestamps: true }); // co dong nay thi mongodb se tu tao 2 dong o duoi
 // createAt

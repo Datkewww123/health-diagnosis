@@ -1,5 +1,4 @@
 const jwt = require('jsonwebtoken'); //tao token sau khi login
-const { setMaxListeners } = require('../model/user');
 const verifyToken = (req, res, next) => {
     const authHeader = req.headers.authorization;
     if(!authHeader){ // khong co header tra ve 401
@@ -13,13 +12,13 @@ const verifyToken = (req, res, next) => {
         next(); //chuyen sang middle ware tiep theo hoac route handler
     }
     catch(err){ // neu token khong hop le
-        return res.status(401).json({message:"Ivalid token"});
+        return res.status(401).json({message:"Invalid token"});
     }
 };
 // admin only
 const isAdmin = (req, res, next) => { //kiem tra xem co phai admin khong
     if(req.user.role !== "admin"){
-        return res.status(403).json({message:"Access Denine, only for admin!"});
+        return res.status(403).json({message:"Access Denied, only for admin!"});
     }
     next();
 }
