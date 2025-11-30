@@ -1,30 +1,20 @@
 const User = require('../model/user'); //save user into database
 const bcrypt = require('bcrypt'); // su dung thu vien bcrypt de ma hoa mat khau
 const jwt = require('jsonwebtoken'); //tao token sau khi login
-const nodemailer = require('nodemailer');//
-
-// --- SỬA ĐOẠN NÀY ---
-// 1. Khai báo email và pass ra biến riêng để dễ kiểm soát
-const MY_EMAIL = 'nguyendatz567@gmail.com';
-const MY_PASS = 'jfdz zcfn vjsv sjfc'; // Mật khẩu ứng dụng 16 ký tự của bạn
-
-// 2. In ra terminal để chắc chắn nó không bị rỗng (Debug)
-console.log(">>> CHECK EMAIL CREDENTIALS:");
-console.log("Email:", MY_EMAIL);
-console.log("Pass:", MY_PASS ? "Da co password" : "Thieu password!");
-
+const nodemailer = require('nodemailer');// 
+// 1. Khai bao email , password ben .env de bao mat
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: MY_EMAIL,
-    pass: MY_PASS 
+    user: process.env.MY_EMAIL,
+    pass: process.env.MY_PASS 
   }
 });
 class AuthController{
   //signup
     async signup (req,res) { // lay du lieu nguoi dung gui len 
     try {
-      const { First_name, Last_name, Username, phone, email, password, confirm_password } = req.body;
+      const { First_name, Last_name, Username, phone, email, password} = req.body;
       const existEmail = await User.findOne({email});
       if(existEmail){ // kiem tra xem email nay co duoc su dung chua 
         return res.json({ok: false, message:"Email is already in used"});
@@ -77,12 +67,11 @@ catch(err){
 //logout
   async logout (req, res){
     res.status(200).json({message:'Logout successful!'});
-  }
+  };
+
 async forgotpassword(req, res) {
     try {
       const { email } = req.body;
-      console.log("1. Nhận request cho email:", email);
-
       const user = await User.findOne({ email });
       
       // Nếu không tìm thấy user
@@ -106,9 +95,7 @@ async forgotpassword(req, res) {
         text: `Mã OTP của bạn là: ${otp}. Mã này có hiệu lực trong 10 phút`
       };
 
-        transporter.sendMail(mailOptions).catch((err) => {
-           // Có thể ghi log lỗi vào file nếu cần, hiện tại để trống để không hiện terminal
-      });
+        transporter.sendMail(mailOptions).catch((err) => {});
     } 
     catch (err) {
       // Chỉ bắt lỗi nếu chưa kịp trả lời Frontend
