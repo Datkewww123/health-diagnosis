@@ -9,11 +9,11 @@ const OtpCode = require('../model/otpcode');
 // Cấu hình email
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
-  port: 465,
-  secure: true, // dùng SSL (bắt buộc cho port 465)
+  port: 587,
+  secure: false, // STARTTLS
   auth: {
     user: process.env.MY_EMAIL,
-    pass: process.env.MY_PASS 
+    pass: process.env.MY_APP_PASSWORD // App Password 16 ký tự
   }
 });
 
