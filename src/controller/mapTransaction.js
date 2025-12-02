@@ -226,3 +226,8 @@ function translateMatchedList(matched) {
 function translateDiseaseName(name) {
     return EN_TO_VI[name] || name;
 }
+module.exports = {
+    processInputSymptoms,
+    translateMatchedList,
+    translateDiseaseName
+};
