@@ -207,15 +207,13 @@ function processInputSymptoms(input) {
             }
         });
 
+    // Nếu không map được từ tiếng Việt, giữ nguyên input (giả sử là tiếng Anh)
+    if (translated.length === 0) {
+        translated = Array.isArray(input) ? input.map(i => i.toLowerCase()) : [str];
+    }
+
     return translated;
 }
-   // Nếu không map được từ tiếng Việt, giữ nguyên input (giả sử là tiếng Anh)
-        if (translated.length === 0) {
-            translated = Array.isArray(input) ? input.map(i => i.toLowerCase()) : [str];
-        }
-
-        return translated;
-{}
 // EN → VI (triệu chứng)
 function translateMatchedList(matched) {
     return matched.map(en => {
