@@ -1,5 +1,6 @@
 const User = require('../model/user'); //save user into database
 const bcrypt = require('bcrypt'); // su dung thu vien bcrypt de ma hoa mat khau
+const OtpCode = require('../model/otpcode'); // lay thu vien
 const jwt = require('jsonwebtoken'); //tao token sau khi login
 const nodemailer = require('nodemailer');// 
 // 1. Khai bao email , password ben .env de bao mat
@@ -68,88 +69,90 @@ catch(err){
   async logout (req, res){
     res.status(200).json({message:'Logout successful!'});
   };
-
-async forgotpassword(req, res) {
+// forgot password
+  async forgotPassword(req, res) {
     try {
       const { email } = req.body;
       const user = await User.findOne({ email });
-      
-      // Nếu không tìm thấy user
-      if (!user) {
-        return res.status(404).json({ message: 'Email không tồn tại!' });
-      }
+      if (!user) return res.status(404).json({ message: 'Email không tìm thấy!' });
 
-      // Tao va luu OTP
+      // Tạo OTP
       const otp = Math.floor(100000 + Math.random() * 900000).toString();
-      user.otp = otp;
-      user.otpExpires = Date.now() + 10 * 60 * 1000; 
-      await user.save();
-      // Bước 1: Trả lời Frontend NGAY LẬP TỨC (để nó chuyển trang nhập OTP luôn)
-      res.status(200).json({ 
-          message: 'Đã gửi mail thành công! Vui lòng kiểm tra hòm thư.' 
+      const hashedOtp = await bcrypt.hash(otp, 10);
+
+      // Lưu vào OtpCode collection, xóa OTP cũ nếu có
+      await OtpCode.findOneAndDelete({ userId: user._id });
+      await OtpCode.create({
+        userId: user._id,
+        otp: hashedOtp,
+        expiresAt: Date.now() + 10 * 60 * 1000
       });
+
+      res.status(200).json({ message: 'OTP đã được gửi thành công. Vui lòng kiểm tra email của bạn!' });
+
+      // Gửi email bất đồng bộ
       const mailOptions = {
-        from: '"Health Care Support" <nguyendatz567@gmail.com>',
+        from: `"Health Care Support" <${process.env.MY_EMAIL}>`,
         to: email,
-        subject: 'Mã xác thực để lấy lại mật khẩu',
-        text: `Mã OTP của bạn là: ${otp}. Mã này có hiệu lực trong 10 phút`
+        subject: 'Mã OTP để đặt lại mật khẩu',
+        text: `Mã OTP của bạn là: ${otp}. Mã này có hiệu lực trong 10 phút.`
       };
 
-        transporter.sendMail(mailOptions).catch((err) => {});
-    } 
-    catch (err) {
-      // Chỉ bắt lỗi nếu chưa kịp trả lời Frontend
-      if (!res.headersSent) {
-          res.status(500).json({ message: err.message });
-      }
+      transporter.sendMail(mailOptions).catch(err => console.error('SendMail error:', err));
+
+    } catch (err) {
+      if (!res.headersSent) res.status(500).json({ message: err.message });
     }
-  };
+  }
   //Verify OTP
-  async verifyOtp(req, res){
-    try{
-      const{email, otp} = req.body;
-      const user = await User.findOne({email});
-      if(!user){
-        return res.status(404).json({message:'User không tồn tại!'});
-      }
-      if(user.otp !== otp){
-        return res.status(400).json({message:'Mã OTP không chính xác!'})
-      }
-      if(user.otpExpires < Date.now()){
-        return res.status(400).json({message:'Mã OTP đã hết hiệu lục'});
-      }
-      res.json({message:'Xác thực OTP thành công, bạn có thể đặt lại mật khẩu'});
+  async verifyOtp(req, res) {
+    try {
+      const { email, otp } = req.body;
+      const user = await User.findOne({ email });
+      if (!user) return res.status(404).json({ message: "User không tồn tại!" });
+
+      const otpRecord = await OtpCode.findOne({ userId: user._id });
+      if (!otpRecord) return res.status(400).json({ message: "OTP không tồn tại! Vui lòng yêu cầu mã mới." });
+
+      if (otpRecord.expiresAt < Date.now()) return res.status(400).json({ message: "OTP đã hết hạn!" });
+
+      const match = await bcrypt.compare(otp, otpRecord.otp);
+      if (!match) return res.status(400).json({ message: "OTP không chính xác!" });
+
+      res.json({ message: "Xác thực OTP thành công, bạn có thể đặt lại mật khẩu ngay bây giờ." });
+
+    } catch (err) {
+      res.status(500).json({ message: err.message });
     }
-    catch(err){
-      return res.status(500).json({message: err.message});
-    }
-  };
+  }
 // Reset password
-async resetPassword(req, res){
-  try{
-    const { email, otp, newPassword} = req.body;
-    const user = await User.findOne({email});
-    if(!user){
-      return res.status(404).json({message:'User không tồn tại!'});
+  async resetPassword(req, res) {
+    try {
+      const { email, otp, newPassword } = req.body;
+      const user = await User.findOne({ email });
+      if (!user) return res.status(404).json({ message: 'User không tồn tại!' });
+
+      const otpRecord = await OtpCode.findOne({ userId: user._id });
+      if (!otpRecord) return res.status(400).json({ message: "OTP không tồn tại! Vui lòng yêu cầu mã mới." });
+      if (otpRecord.expiresAt < Date.now()) return res.status(400).json({ message: "OTP đã hết hạn!" });
+
+      const match = await bcrypt.compare(otp, otpRecord.otp);
+      if (!match) return res.status(400).json({ message: "OTP không chính xác!" });
+
+      // Hash mật khẩu mới
+      const hash = await bcrypt.hash(newPassword, 10);
+      user.password = hash;
+      await user.save();
+
+      // Xóa OTP đã dùng
+      await OtpCode.findByIdAndDelete(otpRecord._id);
+
+      res.json({ message: 'Đặt lại mật khẩu thành công! Vui lòng đăng nhập lại.' });
+
+    } catch (err) {
+      res.status(500).json({ message: err.message });
     }
-    if(user.otp !== otp){
-      return res.status(404).json({message:'Mã OTP không chính xác!'});
-    }
-    if( user.otpExpires < Date.now()){
-      return res.status(404).json({message:'Mã OTP đã hết hạn'})
-    }
-    // ma hoa mat khau moi
-    const salt = await bcrypt.genSalt(10);
-    user.password = await bcrypt.hash(newPassword, salt);
-    user.otp = undefined;
-    user.otpExpires = undefined;
-    await user.save();
-    res.json({message:'Đổi mật khẩu thành công! Vui lòng đăng nhập lại'});
   }
-  catch(err){
-    return res.status(500).json({message: err.message});
-  }
-};
 // lay thong tin user hien tại
 async getuser(req, res){
   try{

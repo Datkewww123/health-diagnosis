@@ -196,10 +196,10 @@ function processInputSymptoms(input) {
 
     str = str.trim().replace(/\s+/g, ' ');
 
-    // Map VI → EN
+    // Map VI -> EN
     let translated = [];
     Object.keys(VI_TO_EN)
-        .sort((a, b) => b.length - a.length)
+        .sort((a, b) => b.length - a.length) // ưu tiên cụm dài
         .forEach(key => {
             if (str.includes(key)) {
                 translated.push(VI_TO_EN[key]);
@@ -207,14 +207,15 @@ function processInputSymptoms(input) {
             }
         });
 
-    // Nếu không map được từ tiếng Việt, giữ nguyên input (giả sử là tiếng Anh)
-    if (translated.length === 0) {
-        translated = Array.isArray(input) ? input.map(i => i.toLowerCase()) : [str];
-    }
-
     return translated;
 }
+   // Nếu không map được từ tiếng Việt, giữ nguyên input (giả sử là tiếng Anh)
+        if (translated.length === 0) {
+            translated = Array.isArray(input) ? input.map(i => i.toLowerCase()) : [str];
+        }
 
+        return translated;
+{}
 // EN → VI (triệu chứng)
 function translateMatchedList(matched) {
     return matched.map(en => {
@@ -227,9 +228,3 @@ function translateMatchedList(matched) {
 function translateDiseaseName(name) {
     return EN_TO_VI[name] || name;
 }
-
-module.exports = {
-    processInputSymptoms,
-    translateMatchedList,
-    translateDiseaseName
-};
