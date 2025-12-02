@@ -70,7 +70,7 @@ catch(err){
     res.status(200).json({message:'Logout successful!'});
   };
 // forgot password
-  async forgotPassword(req, res) {
+  async forgotpassword(req, res) {
     try {
       const { email } = req.body;
       const user = await User.findOne({ email });
@@ -126,7 +126,7 @@ catch(err){
     }
   }
 // Reset password
-  async resetPassword(req, res) {
+  async resetpassword(req, res) {
     try {
       const { email, otp, newPassword } = req.body;
       const user = await User.findOne({ email });

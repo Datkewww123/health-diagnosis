@@ -8,6 +8,6 @@ router.post('/login', auth.login); //path den login
 router.post('/logout', auth.logout);// path de logout
 router.post('/forgotpassword', auth.forgotpassword); // khi quen mat khau
 router.post('/verifyOtp', auth.verifyOtp); // xac thuc otp
-router.post('/resetpassword', auth.resetPassword); // resetpassword
+router.post('/resetpassword', auth.resetpassword); // resetpassword
 router.get('/getuser', verifyToken, auth.getuser); // Phải có verifyToken đứng giữa để check xem user đã đăng nhập chưa
 module.exports = router; //xuat router ra ngoai de file khac su dung
