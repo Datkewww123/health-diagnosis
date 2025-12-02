@@ -70,40 +70,50 @@ catch(err){
     res.status(200).json({message:'Logout successful!'});
   };
 // forgot password
-  async forgotpassword(req, res) {
-    try {
-      const { email } = req.body;
-      const user = await User.findOne({ email });
-      if (!user) return res.status(404).json({ message: 'Email không tìm thấy!' });
+async forgotpassword(req, res) {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ message: 'Email không tìm thấy!' });
 
-      // Tạo OTP
-      const otp = Math.floor(100000 + Math.random() * 900000).toString();
-      const hashedOtp = await bcrypt.hash(otp, 10);
+    // Tạo OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const hashedOtp = await bcrypt.hash(otp, 10);
 
-      // Lưu vào OtpCode collection, xóa OTP cũ nếu có
-      await OtpCode.findOneAndDelete({ userId: user._id });
-      await OtpCode.create({
-        userId: user._id,
-        otp: hashedOtp,
-        expiresAt: Date.now() + 10 * 60 * 1000
-      });
-
-      res.status(200).json({ message: 'OTP đã được gửi thành công. Vui lòng kiểm tra email của bạn!' });
-
-      // Gửi email bất đồng bộ
-      const mailOptions = {
-        from: `"Health Care Support" <${process.env.MY_EMAIL}>`,
-        to: email,
-        subject: 'Mã OTP để đặt lại mật khẩu',
-        text: `Mã OTP của bạn là: ${otp}. Mã này có hiệu lực trong 10 phút.`
-      };
-
-      transporter.sendMail(mailOptions).catch(err => console.error('SendMail error:', err));
-
-    } catch (err) {
-      if (!res.headersSent) res.status(500).json({ message: err.message });
+    // Kiểm tra model OtpCode có đúng không
+    if (!OtpCode || !OtpCode.deleteOne) {
+      console.error("OtpCode model is not correct:", OtpCode);
+      return res.status(500).json({ message: "Server error: OtpCode model invalid" });
     }
+
+    // Xóa OTP cũ nếu có
+    await OtpCode.deleteOne({ userId: user._id });
+
+    // Lưu OTP mới
+    await OtpCode.create({
+      userId: user._id,
+      otp: hashedOtp,
+      expiresAt: new Date(Date.now() + 10 * 60 * 1000) // 10 phút sau
+    });
+
+    // Gửi phản hồi trước khi gửi email (không block)
+    res.status(200).json({ message: 'OTP đã được gửi thành công. Vui lòng kiểm tra email của bạn!' });
+
+    // Gửi email bất đồng bộ
+    const mailOptions = {
+      from: `"Health Care Support" <${process.env.MY_EMAIL}>`,
+      to: email,
+      subject: 'Mã OTP để đặt lại mật khẩu',
+      text: `Mã OTP của bạn là: ${otp}. Mã này có hiệu lực trong 10 phút.`
+    };
+
+    transporter.sendMail(mailOptions).catch(err => console.error('SendMail error:', err));
+
+  } catch (err) {
+    console.error(err);
+    if (!res.headersSent) res.status(500).json({ message: err.message });
   }
+}
   //Verify OTP
   async verifyOtp(req, res) {
     try {
