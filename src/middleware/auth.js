@@ -1,5 +1,6 @@
 // kiem tra xem la admin hay user
 const jwt = require('jsonwebtoken'); //tao token sau khi login
+//middle ware de kiem tra token xem user da login chua
 const verifyToken = (req, res, next) => {
     const authHeader = req.headers.authorization; //
     if(!authHeader){ // khong co header tra ve 401
@@ -7,7 +8,7 @@ const verifyToken = (req, res, next) => {
     }
     const token = authHeader.split(" ")[1]; // lay phan sau cua bearer de kiem tra token
     try{
-        const decoded = jwt.verify(token, "SECRET KEY"); // kiem tra token co hop le khong voi serect key
+        const decoded = jwt.verify(token,"SECRET_KEY"); // kiem tra token co hop le khong voi serect key
         req.user = decoded; // neu hop le thi giai ma payload gan vao req.user
         next(); //chuyen sang middle ware tiep theo hoac route handler
     }
@@ -15,11 +16,34 @@ const verifyToken = (req, res, next) => {
         return res.status(401).json({message:"Invalid token"});
     }
 };
+// optional login de luu lich su
+const optionalAuth = (req, res, next) => {
+    const authHeader = req.headers.authorization;
+    // neu khong co token thi req.user = null va chuyen tiep
+    if(!authHeader){
+        req.user = null;
+        return next();
+    }
+    const token = authHeader.split(' ')[1];
+    try{
+        const decoded = jwt.verify(token, "SECRET_KEY");
+        req.user = decoded;
+    }
+    catch(err){
+        req.user = null;
+    }
+    next();
+}
 // admin only
-const isAdmin = (req, res, next) => { //kiem tra xem co phai admin khong
+const isAdmin = (req, res, next) => { 
+      if (!req.user) {
+        return res.status(401).json({ message: "Unauthorized, no user info" });
+    }
+    
+    //kiem tra xem co phai admin khong
     if(req.user.role !== "admin"){
         return res.status(403).json({message:"Access Denied, only for admin!"});
     }
     next();
 }
-module.exports = {verifyToken, isAdmin};
+module.exports = {verifyToken, isAdmin, optionalAuth};

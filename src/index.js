@@ -9,6 +9,7 @@ const app = express(); // tao 1 app chay tren framework express
 //import route  
 const authRoutes = require('./routes/auth'); // import auth tu router
 const symptomRoutes = require('./routes/symptoms'); // import symptoms từ router
+const diseasesRoutes = require('./routes/disease'); // import diseases tu router
 // ket nối db
 connectDB();
 
@@ -21,6 +22,7 @@ app.use(express.json());
 // dang ki route (duong dan api)
 app.use('/api/auth', authRoutes); // dung router cho api
 app.use('/api/symptoms', symptomRoutes); // duong dan den symptoms
+app.use('/api/diseases', diseasesRoutes); // duong dan den diseases
 
 
 // route trang chu

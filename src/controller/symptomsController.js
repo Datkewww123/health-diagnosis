@@ -4,6 +4,7 @@ const {
     translateMatchedList,
     translateDiseaseName
 } = require("../controller/mapTransaction");
+const History = require('../model/history');
 
 class SymptomsController {
     async symptomsCheck(req, res){
@@ -53,6 +54,17 @@ class SymptomsController {
                 .filter(Boolean)
                 .sort((a, b) => b.score - a.score);
 
+
+            // luu lịch sử dự đoán
+            if(req.user){
+                await History.create({
+                userId: req.user.id,
+                type: "predict",
+                inputSymptoms: symptoms,
+                });
+            }
+
+            // tra ve ket qua
             return res.json({
                 message: "Kết quả chuẩn đoán",
                 count: filtered.length,

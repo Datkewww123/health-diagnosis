@@ -9,7 +9,7 @@ const oAuth2Client = new google.auth.OAuth2(
 
 oAuth2Client.setCredentials({
   refresh_token: process.env.GMAIL_REFRESH_TOKEN,
-});
+}); 
 
 async function createTransporter() {
   const accessToken = await oAuth2Client.getAccessToken();
