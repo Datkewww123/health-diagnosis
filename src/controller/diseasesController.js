@@ -3,10 +3,11 @@ const {
     translateDiseaseName,
     translateDiseaseVItoEN,
     translateDiagnosis,
+    translateTreatment,
     translateDoctor,
     translateDepartment,
-    translateTreatment,
     translatePrecaution,
+    translateMatchedList,
     translateDescription,
     translateRiskFactor,
 } = require("../controller/mapTransaction");
@@ -63,67 +64,69 @@ class DiseasesController{
 async getDetailed(req, res) {
         try {
             const { id } = req.params;
-
             const disease = await Diseases.findById(id);
+
             if (!disease) {
-                return res.status(404).json({
-                    message: "Không tìm thấy bệnh!"
-                });
+                return res.status(404).json({ message: "Không tìm thấy bệnh!" });
             }
 
             // --- XỬ LÝ DỮ LIỆU ---
 
-            // 1. Triệu chứng: Nếu có trường symptoms_vi trong DB thì dùng, không thì tách từ mảng
-            // Xử lý an toàn: đảm bảo symptoms là mảng hoặc chuỗi
-            let symptomsRaw = disease.symptoms_vi || disease.symptoms;
-            let symptomsList = [];
-            
-            if (Array.isArray(symptomsRaw)) {
-                symptomsList = symptomsRaw;
-            } else if (typeof symptomsRaw === 'string') {
-                // Tách dấu phẩy hoặc chấm phẩy
-                symptomsList = symptomsRaw.split(/[,;]/).map(s => s.trim());
+            // A. Xử lý Triệu chứng (Symptoms)
+            // Lấy mảng gốc tiếng Anh, nếu là string thì tách ra
+            let rawSymptoms = disease.symptoms || [];
+            if (typeof rawSymptoms === 'string') {
+                rawSymptoms = rawSymptoms.split(/[,;]/).map(s => s.trim());
             }
+            // Gọi hàm dịch danh sách (EN -> VI)
+            // Lưu ý: Nếu DB có sẵn symptoms_vi thì dùng luôn, còn không thì dịch từ rawSymptoms
+            const symptomsVI = disease.symptoms_vi 
+                ? disease.symptoms_vi.split(/[,;]/).map(s => s.trim())
+                : translateMatchedList(rawSymptoms);
 
-            // 2. Chẩn đoán (Mảng EN -> Mảng VI)
-            const rawDiagnosis = Array.isArray(disease.diagnosis) ? disease.diagnosis : [disease.diagnosis];
-            const diagnosisVI = rawDiagnosis.map(d => translateDiagnosis(d)).filter(Boolean); // Lọc bỏ null
 
-            // 3. Điều trị (Mảng EN -> Mảng VI)
-            const rawTreatment = Array.isArray(disease.treatment) ? disease.treatment : [disease.treatment];
-            const treatmentVI = rawTreatment.map(t => translateTreatment(t)).filter(Boolean);
+            // B. Xử lý Mô tả (Overview/Description)
+            // Lấy text gốc -> Gọi hàm dịch
+            const rawDesc = disease.Description || disease.overview;
+            const descriptionVI = translateDescription(rawDesc); // Trả về tiếng Việt hoặc null
 
-            // 4. Bác sĩ (Mảng EN -> Mảng VI)
-            const rawDoctor = Array.isArray(disease.doctor) ? disease.doctor : [disease.doctor];
-            const doctorVI = rawDoctor.map(d => translateDoctor(d)).filter(Boolean);
 
-            // 5. Chuyên khoa (String EN -> String VI)
+            // C. Xử lý Nguyên nhân (Causes/Risk Factor)
+            // Lấy text gốc -> Gọi hàm dịch
+            const rawCauses = disease.risk_factor || disease.causes;
+            const causesVI = translateRiskFactor(rawCauses); // Trả về tiếng Việt hoặc null
+
+
+            // D. Xử lý các mảng khác (Chẩn đoán, Điều trị, Bác sĩ...)
+            const diagnosisVI = (Array.isArray(disease.diagnosis) ? disease.diagnosis : [disease.diagnosis])
+                                .map(d => translateDiagnosis(d)).filter(Boolean);
+
+            const treatmentVI = (Array.isArray(disease.treatment) ? disease.treatment : [disease.treatment])
+                                .map(t => translateTreatment(t)).filter(Boolean);
+
+            const doctorVI = (Array.isArray(disease.doctor) ? disease.doctor : [disease.doctor])
+                                .map(d => translateDoctor(d)).filter(Boolean);
+
+
+            // E. Xử lý các trường đơn lẻ
             const departmentVI = translateDepartment(disease.department);
-
-            // 6. Lời khuyên (String keys -> String VI)
             const precaution1 = translatePrecaution(disease.Precaution_1);
             const precaution2 = translatePrecaution(disease.Precaution_2);
             const precaution3 = translatePrecaution(disease.Precaution_3);
             const precaution4 = translatePrecaution(disease.Precaution_4);
 
-            // 7. Mô tả tổng quan (Description -> VI) [MỚI]
-            const descriptionVI = translateDescription(disease.Description);
 
-            // 8. Nguyên nhân/Yếu tố nguy cơ (Risk Factor -> VI) [MỚI]
-            // Map nhận vào chuỗi hoặc mảng đều được
-            const riskFactorVI = translateRiskFactor(disease.risk_factor);
-
+            // --- ĐÓNG GÓI DỮ LIỆU TRẢ VỀ ---
             const detailData = {
                 _id: disease._id,
-                name: translateDiseaseName(disease.name), // Tên tiếng Việt
+                name: translateDiseaseName(disease.name),
                 
-                // Ưu tiên bản dịch mới, nếu không có thì fallback về bản gốc
-                overview: descriptionVI || disease.Description || disease.overview, 
+                // Logic: Nếu dịch được (có trong Map) thì lấy tiếng Việt, không thì lấy tiếng Anh gốc
+                overview: descriptionVI || rawDesc,
                 
-                symptoms: (disease.symptoms_vi || disease.symptoms || "").split(',').map(s => s.trim()),
+                symptoms: symptomsVI,
                 
-                // Mapping risk_factor sang causes để hiển thị
-                causes: riskFactorVI || disease.causes, 
+                causes: causesVI || rawCauses,
                 
                 diagnosis: diagnosisVI,
                 treatment: treatmentVI,
@@ -142,11 +145,8 @@ async getDetailed(req, res) {
 
         } catch (err) {
             console.error(err);
-            return res.status(500).json({
-                message: "Lỗi khi lấy chi tiết bệnh"
-            });
+            return res.status(500).json({ message: "Lỗi khi lấy chi tiết bệnh" });
         }
     }
 }
-
 module.exports = new DiseasesController();
