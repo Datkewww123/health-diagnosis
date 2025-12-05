@@ -227,6 +227,15 @@ const VI_TO_EN_DISEASES = {
 };
 
 const VI_TRANSLATE_PRECAUTION = {
+    "lie_down": "Nằm nghỉ ngay lập tức",
+    "avoid_sudden_change_in_body": "Tránh thay đổi tư thế đột ngột",
+    "avoid_abrupt_head_movment": "Tránh cử động đầu mạnh/đột ngột", 
+    "avoid_abrupt_head_movement": "Tránh cử động đầu mạnh/đột ngột", 
+    "relax": "Thư giãn",
+    "bath_twice": "Tắm 2 lần/ngày",
+    "avoid_fatty_spicy_food": "Hạn chế đồ ăn cay nóng, nhiều dầu mỡ",
+    "drink_plenty_of_water": "Uống nhiều nước",
+    "avoid_too_many_products": "Tránh dùng quá nhiều mỹ phẩm",
   "consult_nearest_hospital": "Đến bệnh viện gần nhất",
   "acetaminophen": "Sử dụng Acetaminophen",
   "anti_itch_medicine": "Dùng thuốc chống ngứa",
@@ -347,8 +356,13 @@ const VI_TRANSLATE_DOCTORS = {
   "vascular_surgeon": "Bác sĩ phẫu thuật mạch máu",
   "general_practice": "Bác sĩ đa khoa",      
   "internal_medicine": "Khoa Nội",
+  "general_practice": "Bác sĩ đa khoa",
+    "specialized_departments_as_needed": "Các chuyên khoa khác nếu cần",
+    "family_medicine": "Bác sĩ gia đình",
+    "infectious_disease": "Khoa Truyền nhiễm"
 };
 const VI_TRANSLATE_DEPARTMENT = {
+     "internal_medicine": "Khoa Nội",
 "cardiology": "Khoa Tim mạch",
   "dermatology": "Khoa Da liễu",
   "endocrinology": "Khoa Nội tiết",
@@ -368,6 +382,14 @@ const VI_TRANSLATE_DEPARTMENT = {
 }
 
 const VI_DIAGNOSIS_MAP = {
+    "dix_hallpike_maneuver": "Nghiệm pháp Dix-Hallpike",
+    "videonystagmography": "Ghi động nhãn đồ (VNG)",
+    "physical_neurological_exam": "Khám thần kinh lâm sàng",
+    "elisa_hiv_test": "Xét nghiệm HIV ELISA",
+    "western_blot": "Xét nghiệm Western blot", 
+    "viral_load_count": "Đo tải lượng virus",
+    "cd4_count": "Đếm tế bào CD4",
+    "do_tai_luong_virus": "Đo tải lượng virus",
 "anti_hev_test": "Xét nghiệm kháng thể HEV",
   "antiâ€‘hav_igm_test": "Xét nghiệm kháng thể IgM kháng HAV",
   "bp_monitoring": "Theo dõi huyết áp",
@@ -443,7 +465,12 @@ const VI_DIAGNOSIS_MAP = {
 };
 
 const VI_TREATMENT_MAP = {
-"ace_inhibitors": "Thuốc ức chế men chuyển (ACE)",
+    "epley_maneuver": "Thủ thuật Epley",
+    "vestibular_rehabilitation_therapy": "Phục hồi chức năng tiền đình",
+    "balance_exercises": "Bài tập thăng bằng",
+    "antiretroviral_therapy_art": "Liệu pháp kháng virus (ART)",
+    "prophylaxis_for_opportunistic_infections": "Dự phòng nhiễm trùng cơ hội",
+    "ace_inhibitors": "Thuốc ức chế men chuyển (ACE)",
   "alcohol_cessation": "Cai rượu",
   "antibiotics": "Kháng sinh",
   "antibiotics_ceftriaxone": "Kháng sinh (Ceftriaxone)",
@@ -559,7 +586,11 @@ const VI_DESCRIPTION_MAP = {
     "acne is a skin condition that occurs when your hair follicles become plugged with oil and dead skin cells": "Mụn trứng cá là bệnh da liễu xảy ra khi nang lông bị bít tắc bởi dầu và tế bào chết.",
     "urinary tract infection is an infection in any part of your urinary system": "Nhiễm trùng đường tiết niệu là tình trạng nhiễm trùng ở bất kỳ bộ phận nào của hệ tiết niệu.",
     "psoriasis is a skin disease that causes red, itchy scaly patches, most commonly on the knees, elbows, trunk and scalp": "Vảy nến là bệnh da liễu gây ra các mảng đỏ, ngứa và đóng vảy, thường ở đầu gối, khuỷu tay và da đầu.",
-    "impetigo is a common and highly contagious skin infection that mainly affects infants and children": "Chốc lở là bệnh nhiễm trùng da phổ biến và dễ lây lan, thường gặp ở trẻ sơ sinh và trẻ nhỏ."
+    "impetigo is a common and highly contagious skin infection that mainly affects infants and children": "Chốc lở là bệnh nhiễm trùng da phổ biến và dễ lây lan, thường gặp ở trẻ sơ sinh và trẻ nhỏ.",
+    "a vestibular disorder where displaced otolith crystals in the inner ear trigger sudden, brief episodes of vertigo, especially with head movement": 
+    "Một dạng rối loạn tiền đình nơi các tinh thể thạch nhĩ trong tai trong bị lệch gây ra các cơn chóng mặt đột ngột, ngắn, đặc biệt là khi cử động đầu.",
+    "the final stage of hiv infection, where severe immune system damage leads to life-threatening infections and cancers": 
+    "Giai đoạn cuối của nhiễm HIV, khi hệ miễn dịch bị tổn thương nghiêm trọng dẫn đến các bệnh nhiễm trùng cơ hội và ung thư đe dọa tính mạng.",
 };
 
 const VI_RISK_FACTOR_MAP = {
@@ -591,18 +622,18 @@ const VI_RISK_FACTOR_MAP = {
     "humid weather": "Thời tiết ẩm ướt"
 };
 
-// Chuyển "General Practice" -> "general_practice" để khớp với Map
 function normalizeKeyToSnakeCase(str) {
     if (!str) return "";
-    // Chuyển thành chữ thường, xóa khoảng trắng thừa, thay dấu cách bằng dấu gạch dưới, thay dấu gạch ngang bằng gạch dưới
-    return str.toString().toLowerCase().trim().replace(/[\s\-]+/g, '_');
+    return str.toString()
+        .toLowerCase()
+        .trim()
+        .replace(/[.,;!]+$/, '') // <--- QUAN TRỌNG: Xóa dấu chấm/phẩy ở cuối câu
+        .replace(/[\s\-]+/g, '_'); // Thay khoảng trắng và gạch ngang bằng _
 }
 function translateDiagnosis(en) {
     if (!en) return null;
-    const cleanInput = en.toLowerCase().trim();
-    const snakeInput = normalizeKeyToSnakeCase(en); 
-    // Thử tìm cả 2 kiểu: thường và snake_case
-    return VI_DIAGNOSIS_MAP[cleanInput] || VI_DIAGNOSIS_MAP[snakeInput] || en;
+    const cleanKey = normalizeKeyToSnakeCase(en);
+    return VI_DIAGNOSIS_MAP[cleanKey] || en;
 }
 
 function processInputSymptoms(input) {
@@ -631,6 +662,8 @@ function processInputSymptoms(input) {
     }
     return translated;
 }
+
+
 function translateMatchedList(matchedEnList) {
     if (!matchedEnList || matchedEnList.length === 0) return [];
     
@@ -661,22 +694,34 @@ function translateDiseaseVItoEN(nameVI) {
 // EN -> VI (Chẩn đoán)
 function translateTreatment(en) {
     if (!en) return null;
-    const cleanInput = en.toLowerCase().trim();
-    const snakeInput = normalizeKeyToSnakeCase(en);
-    return VI_TREATMENT_MAP[cleanInput] || VI_TREATMENT_MAP[snakeInput] || en;
+    const cleanKey = normalizeKeyToSnakeCase(en);
+    return VI_TREATMENT_MAP[cleanKey] || en;
 }
 //  HÀM DỊCH MÔ TẢ 
 function translateDescription(en) {
     if (!en) return null;
-    const key = en.toLowerCase().trim();
-    // Thử tìm chính xác
-    if (VI_DESCRIPTION_MAP[key]) {
-        return VI_DESCRIPTION_MAP[key];
-    }
-    // Nếu không tìm thấy chính xác, trả về nguyên gốc (hoặc có thể xử lý mờ nếu cần)
-    return en;
-}
+    
+    const cleanInput = normalizeString(en);
 
+    // Duyệt qua map để tìm (đề phòng DB có dấu chấm cuối câu mà Map không có hoặc ngược lại)
+    for (const key in VI_DESCRIPTION_MAP) {
+        if (normalizeString(key) === cleanInput) {
+            return VI_DESCRIPTION_MAP[key];
+        }
+    }
+    // Nếu tìm chính xác không thấy, thử tìm kiểu "chứa trong" (fuzzy match) cho đoạn văn dài
+    // (Chỉ dùng nếu bạn muốn map thoáng hơn)
+    for (const key in VI_DESCRIPTION_MAP) {
+        if (cleanInput.includes(normalizeString(key)) || normalizeString(key).includes(cleanInput)) {
+             // Chỉ chấp nhận nếu độ dài tương đồng (tránh dịch nhầm từ ngắn)
+             if (Math.abs(cleanInput.length - key.length) < 10) {
+                 return VI_DESCRIPTION_MAP[key];
+             }
+        }
+    }
+
+    return en; 
+}
 //  HÀM DỊCH YẾU TỐ NGUY CƠ 
 function translateRiskFactor(en) {
     if (!en) return null;
@@ -701,9 +746,8 @@ function translateTreatment(en) {
 // EN -> VI (Bác sĩ)
 function translateDoctor(en) {
     if (!en) return null;
-    const cleanInput = en.toLowerCase().trim();
-    const snakeInput = normalizeKeyToSnakeCase(en);
-    return VI_TRANSLATE_DOCTORS[cleanInput] || VI_TRANSLATE_DOCTORS[snakeInput] || en;
+    const cleanKey = normalizeKeyToSnakeCase(en);
+    return VI_TRANSLATE_DOCTORS[cleanKey] || en;
 }
 
 // EN -> VI (Chuyên khoa)
