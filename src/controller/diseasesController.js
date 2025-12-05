@@ -61,36 +61,38 @@ class DiseasesController{
 
 
       // Lấy chi tiết bệnh
-    async getDetailed(req, res) {
+async getDetailed(req, res) {
         try {
             const { id } = req.params;
             const disease = await Diseases.findById(id);
+            if (!disease) return res.status(404).json({ message: "Không tìm thấy bệnh!" });
 
-            if (!disease) {
-                return res.status(404).json({ message: "Không tìm thấy bệnh!" });
-            }
-
-            // === HÀM PHỤ: CẮT CHUỖI VÀ DỊCH DANH SÁCH ===
-            // Giúp xử lý trường hợp DB lưu: "Thuốc A, Thuốc B" thành mảng ["Thuốc A", "Thuốc B"] rồi mới dịch
-         const processListField = (data, translateFunc) => {
-                if (!data) return []; // Trả về mảng rỗng hoặc chuỗi rỗng tuỳ frontend bạn muốn
+            // === QUAN TRỌNG: HÀM CẮT CHUỖI VÀ DỊCH ===
+            // Hàm này sẽ cắt "A, B" thành ["A", "B"] rồi mới dịch từng cái
+            const processListField = (data, translateFunc) => {
+                if (!data) return [];
                 
                 let list = [];
+                // Bước 1: Chuẩn hóa dữ liệu đầu vào thành mảng
                 if (Array.isArray(data)) {
                     list = data;
                 } else if (typeof data === 'string') {
-                    list = data.split(/[,;]/).map(item => item.trim());
+                    // Cắt theo dấu phẩy (,) hoặc chấm phẩy (;) hoặc xuống dòng (\n)
+                    list = data.split(/[,;\n]/).map(item => item.trim()).filter(item => item.length > 0);
                 }
 
-                // Dịch từng món
-                const translatedList = list.map(item => {
+                // Bước 2: Dịch từng phần tử
+                return list.map(item => {
+                    // Gọi hàm dịch từ mapTransaction
                     const translated = translateFunc(item);
+                    // Nếu dịch được thì lấy, không thì giữ nguyên gốc
                     return translated || item; 
                 });
-                return translatedList.join(', '); 
             };
 
-            // 1. Symptoms (Triệu chứng)
+            // --- XỬ LÝ DỮ LIỆU ---
+
+            // 1. Symptoms
             let symptomsVI = [];
             if (disease.symptoms_vi) {
                 symptomsVI = disease.symptoms_vi.split(/[,;]/).map(s => s.trim());
@@ -100,52 +102,45 @@ class DiseasesController{
                 symptomsVI = translateMatchedList(rawSymptoms || []);
             }
 
-            // 2. Mô tả & Nguyên nhân
+            // 2. Các trường đơn
             const descriptionVI = translateDescription(disease.Description || disease.overview);
             const causesVI = translateRiskFactor(disease.risk_factor || disease.causes);
+            const departmentVI = translateDepartment(disease.department);
 
-            // 3. CÁC TRƯỜNG DANH SÁCH (QUAN TRỌNG: Dùng hàm processListField mới)
+            // 3. CÁC TRƯỜNG DANH SÁCH (Dùng hàm processListField ở trên)
+            // Đây là chỗ giúp Doctor và Diagnosis dịch được
             const diagnosisVI = processListField(disease.diagnosis, translateDiagnosis);
             const treatmentVI = processListField(disease.treatment, translateTreatment);
             const doctorVI    = processListField(disease.doctor, translateDoctor);
 
-            // 4. Các trường đơn
-            const departmentVI = translateDepartment(disease.department);
-            
-            // 5. Lời khuyên
+            // 4. Precaution
             const precaution1 = translatePrecaution(disease.Precaution_1);
             const precaution2 = translatePrecaution(disease.Precaution_2);
             const precaution3 = translatePrecaution(disease.Precaution_3);
             const precaution4 = translatePrecaution(disease.Precaution_4);
 
-
-            // --- TRẢ VỀ KẾT QUẢ ---
             const detailData = {
                 _id: disease._id,
                 name: translateDiseaseName(disease.name),
-                
                 overview: descriptionVI || disease.Description || disease.overview,
                 symptoms: symptomsVI,
                 causes: causesVI || disease.risk_factor || disease.causes,
-                
                 diagnosis: diagnosisVI,
                 treatment: treatmentVI,
                 doctor: doctorVI,
                 department: departmentVI,
-
                 Precaution_1: precaution1,
                 Precaution_2: precaution2,
                 Precaution_3: precaution3,
                 Precaution_4: precaution4,
-
                 image_url: disease.image_url
             };
 
             return res.json(detailData);
 
         } catch (err) {
-            console.error(err);
-            return res.status(500).json({ message: "Lỗi khi lấy chi tiết bệnh" });
+            console.error("Lỗi lấy chi tiết:", err);
+            return res.status(500).json({ message: "Lỗi server" });
         }
     }
 }
