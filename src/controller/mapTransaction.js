@@ -327,12 +327,11 @@ const VI_TRANSLATE_PRECAUTION = {
 
 const VI_TRANSLATE_DOCTORS = {
   // --- Doctors & Departments (Bác sĩ & Chuyên khoa) ---
-  "allergist": "Bác sĩ dị ứng",
+"allergist": "Bác sĩ dị ứng",
   "cardiologist": "Bác sĩ tim mạch",
   "dermatologist": "Bác sĩ da liễu",
-  "dermatology": "Khoa Da liễu",
-  "ent_specialist": "Bác sĩ Tai Mũi Họng",
   "endocrinologist": "Bác sĩ nội tiết",
+  "ent_specialist": "Bác sĩ Tai Mũi Họng",
   "gastroenterologist": "Bác sĩ tiêu hóa",
   "general_physician": "Bác sĩ đa khoa",
   "general_surgeon": "Bác sĩ ngoại khoa",
@@ -345,26 +344,27 @@ const VI_TRANSLATE_DOCTORS = {
   "pulmonologist": "Bác sĩ hô hấp",
   "rheumatologist": "Bác sĩ cơ xương khớp",
   "urologist": "Bác sĩ tiết niệu",
-  "urology": "Khoa Tiết niệu",
-  "vascular_medicine": "Khoa Mạch máu",
   "vascular_surgeon": "Bác sĩ phẫu thuật mạch máu",
+  "general_practice": "Bác sĩ đa khoa",      
+  "internal_medicine": "Khoa Nội",
 };
 const VI_TRANSLATE_DEPARTMENT = {
-        "gastroenterology": "Khoa Tiêu hóa",
-    "general_medicine": "Khoa Nội tổng hợp",
-    "cardiology": "Khoa Tim mạch",
-    "endocrinology": "Khoa Nội tiết",
-        "hepatology": "Khoa Gan mật",
-    "immunology": "Khoa Miễn dịch",
-    "infectious_diseases": "Khoa Truyền nhiễm",
-        "neurology": "Khoa Thần kinh",
-        "orthopedics": "Khoa Chỉnh hình",
-        "otolaryngology": "Khoa Tai Mũi Họng",
-            "proctology": "Khoa Hậu môn - Trực tràng",
-            "pulmonology": "Khoa Hô hấp",
-            "rheumatology": "Khoa Cơ xương khớp",
-            "urology": "Khoa Tiết niệu",
-    "vascular_medicine": "Khoa Mạch máu",
+"cardiology": "Khoa Tim mạch",
+  "dermatology": "Khoa Da liễu",
+  "endocrinology": "Khoa Nội tiết",
+  "gastroenterology": "Khoa Tiêu hóa",
+  "general_medicine": "Khoa Nội tổng hợp",
+  "hepatology": "Khoa Gan mật",
+  "immunology": "Khoa Miễn dịch",
+  "infectious_diseases": "Khoa Truyền nhiễm",
+  "neurology": "Khoa Thần kinh",
+  "orthopedics": "Khoa Chỉnh hình",
+  "otolaryngology": "Khoa Tai Mũi Họng",
+  "proctology": "Khoa Hậu môn - Trực tràng",
+  "pulmonology": "Khoa Hô hấp",
+  "rheumatology": "Khoa Cơ xương khớp",
+  "urology": "Khoa Tiết niệu",
+  "vascular_medicine": "Khoa Mạch máu"
 }
 
 const VI_DIAGNOSIS_MAP = {
@@ -376,7 +376,7 @@ const VI_DIAGNOSIS_MAP = {
   "cd4_count": "Đếm tế bào CD4",
   "ct_scan": "Chụp CT",
   "chest_x_ray": "Chụp X-quang ngực",
-  "chest_xâ€‘ray": "Chụp X-quang ngực",
+  "chest_x-ray": "Chụp X-quang ngực",
   "clinical_diagnosis": "Chẩn đoán lâm sàng",
   "clinical_exam": "Khám lâm sàng",
   "dix_hallpike_maneuver": "Nghiệm pháp Dix-Hallpike",
@@ -591,12 +591,18 @@ const VI_RISK_FACTOR_MAP = {
     "humid weather": "Thời tiết ẩm ướt"
 };
 
-// --- HÀM HỖ TRỢ: CHUẨN HÓA KEY ---
 // Chuyển "General Practice" -> "general_practice" để khớp với Map
 function normalizeKeyToSnakeCase(str) {
     if (!str) return "";
     // Chuyển thành chữ thường, xóa khoảng trắng thừa, thay dấu cách bằng dấu gạch dưới, thay dấu gạch ngang bằng gạch dưới
     return str.toString().toLowerCase().trim().replace(/[\s\-]+/g, '_');
+}
+function translateDiagnosis(en) {
+    if (!en) return null;
+    const cleanInput = en.toLowerCase().trim();
+    const snakeInput = normalizeKeyToSnakeCase(en); 
+    // Thử tìm cả 2 kiểu: thường và snake_case
+    return VI_DIAGNOSIS_MAP[cleanInput] || VI_DIAGNOSIS_MAP[snakeInput] || en;
 }
 
 function processInputSymptoms(input) {
@@ -653,13 +659,11 @@ function translateDiseaseVItoEN(nameVI) {
 }
 
 // EN -> VI (Chẩn đoán)
-function translateDiagnosis(en) {
+function translateTreatment(en) {
     if (!en) return null;
     const cleanInput = en.toLowerCase().trim();
-    const snakeInput = normalizeKeyToSnakeCase(en); 
-
-    // Thử tìm trực tiếp hoặc tìm theo kiểu snake_case
-    return VI_DIAGNOSIS_MAP[cleanInput] || VI_DIAGNOSIS_MAP[snakeInput] || en;
+    const snakeInput = normalizeKeyToSnakeCase(en);
+    return VI_TREATMENT_MAP[cleanInput] || VI_TREATMENT_MAP[snakeInput] || en;
 }
 //  HÀM DỊCH MÔ TẢ 
 function translateDescription(en) {
@@ -699,20 +703,23 @@ function translateDoctor(en) {
     if (!en) return null;
     const cleanInput = en.toLowerCase().trim();
     const snakeInput = normalizeKeyToSnakeCase(en);
-
     return VI_TRANSLATE_DOCTORS[cleanInput] || VI_TRANSLATE_DOCTORS[snakeInput] || en;
 }
 
 // EN -> VI (Chuyên khoa)
 function translateDepartment(en) {
     if (!en) return null;
-    return VI_TRANSLATE_DEPARTMENT[en.toLowerCase()] || en;
+    const cleanInput = en.toLowerCase().trim();
+    const snakeInput = normalizeKeyToSnakeCase(en);
+    return VI_TRANSLATE_DEPARTMENT[cleanInput] || VI_TRANSLATE_DEPARTMENT[snakeInput] || en;
 }
 
 // EN -> VI (Lời khuyên)
 function translatePrecaution(en) {
     if (!en) return null;
-    return VI_TRANSLATE_PRECAUTION[en.toLowerCase()] || en;
+    const cleanInput = en.toLowerCase().trim();
+    const snakeInput = normalizeKeyToSnakeCase(en);
+    return VI_TRANSLATE_PRECAUTION[cleanInput] || VI_TRANSLATE_PRECAUTION[snakeInput] || en;
 }
 
 module.exports = {

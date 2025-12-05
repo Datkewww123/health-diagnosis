@@ -72,25 +72,23 @@ class DiseasesController{
 
             // === HÀM PHỤ: CẮT CHUỖI VÀ DỊCH DANH SÁCH ===
             // Giúp xử lý trường hợp DB lưu: "Thuốc A, Thuốc B" thành mảng ["Thuốc A", "Thuốc B"] rồi mới dịch
-            const processListField = (data, translateFunc) => {
-                if (!data) return [];
+         const processListField = (data, translateFunc) => {
+                if (!data) return []; // Trả về mảng rỗng hoặc chuỗi rỗng tuỳ frontend bạn muốn
                 
                 let list = [];
                 if (Array.isArray(data)) {
                     list = data;
                 } else if (typeof data === 'string') {
-                    // Tách dấu phẩy (,) hoặc chấm phẩy (;) và xóa khoảng trắng thừa
                     list = data.split(/[,;]/).map(item => item.trim());
                 }
 
                 // Dịch từng món
-                return list.map(item => {
+                const translatedList = list.map(item => {
                     const translated = translateFunc(item);
-                    return translated || item; // Nếu không dịch được thì trả về gốc
+                    return translated || item; 
                 });
+                return translatedList.join(', '); 
             };
-
-            // --- XỬ LÝ DỮ LIỆU ---
 
             // 1. Symptoms (Triệu chứng)
             let symptomsVI = [];
