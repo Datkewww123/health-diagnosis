@@ -111,7 +111,10 @@ class DiseasesController{
                 doctor: doctorVI,
                 department: departmentVI,
 
-                precaution: [precaution1, precaution2, precaution3, precaution4].filter(p => p), // Gom thành mảng cho gọn
+                Precaution_1: precaution1,
+                Precaution_2: precaution2,
+                Precaution_3: precaution3,
+                Precaution_4: precaution4,
 
                 image_url: disease.image_url
             };
