@@ -6,7 +6,7 @@ const VIETNAMESE_STOP_WORDS = [
     "như", "là", "và", "hoặc", "nhưng", "thì", "mà", "ở", "với",
     "kiểu", "như", "đau", "nhức", "mỏi", "triệu", "chứng", "của"
 ];
-const VI_TO_EN = {
+const VI_TO_EN_SYMPTOMS = {
  "bong tróc da": "skin peeling",
         "buồn nôn": "nausea",
         "buồn tiểu liên tục": "continuous feel of urine",
@@ -139,7 +139,7 @@ const VI_TO_EN = {
         "ớn lạnh": "chills",
         "ợ chua": "acidity"
 };
-const EN_TO_VI = {
+const EN_TO_VI_DISEASES = {
         "AIDS": "AIDS (Hội chứng suy giảm miễn dịch)",
         "Acne": "Mụn trứng cá",
         "Alcoholic hepatitis": "Viêm gan do rượu",
@@ -329,41 +329,45 @@ const VI_TRANSLATE_DOCTORS = {
   // --- Doctors & Departments (Bác sĩ & Chuyên khoa) ---
   "allergist": "Bác sĩ dị ứng",
   "cardiologist": "Bác sĩ tim mạch",
-  "cardiology": "Khoa Tim mạch",
   "dermatologist": "Bác sĩ da liễu",
   "dermatology": "Khoa Da liễu",
   "ent_specialist": "Bác sĩ Tai Mũi Họng",
   "endocrinologist": "Bác sĩ nội tiết",
-  "endocrinology": "Khoa Nội tiết",
   "gastroenterologist": "Bác sĩ tiêu hóa",
-  "gastroenterology": "Khoa Tiêu hóa",
-  "general_medicine": "Khoa Nội tổng hợp",
   "general_physician": "Bác sĩ đa khoa",
   "general_surgeon": "Bác sĩ ngoại khoa",
   "hepatologist": "Bác sĩ gan mật",
-  "hepatology": "Khoa Gan mật",
-  "immunology": "Khoa Miễn dịch",
-  "infectious_diseases": "Khoa Truyền nhiễm",
   "infectious_disease_specialist": "Bác sĩ truyền nhiễm",
   "neurologist": "Bác sĩ thần kinh",
-  "neurology": "Khoa Thần kinh",
   "orthopedic_specialist": "Bác sĩ chỉnh hình",
-  "orthopedics": "Khoa Chỉnh hình",
   "orthopedist": "Bác sĩ chỉnh hình",
-  "otolaryngology": "Khoa Tai Mũi Họng",
   "pediatrician": "Bác sĩ nhi khoa",
-  "proctology": "Khoa Hậu môn - Trực tràng",
   "pulmonologist": "Bác sĩ hô hấp",
-  "pulmonology": "Khoa Hô hấp",
   "rheumatologist": "Bác sĩ cơ xương khớp",
-  "rheumatology": "Khoa Cơ xương khớp",
   "urologist": "Bác sĩ tiết niệu",
   "urology": "Khoa Tiết niệu",
   "vascular_medicine": "Khoa Mạch máu",
   "vascular_surgeon": "Bác sĩ phẫu thuật mạch máu",
+};
+const VI_TRANSLATE_DEPARTMENT = {
+        "gastroenterology": "Khoa Tiêu hóa",
+    "general_medicine": "Khoa Nội tổng hợp",
+    "cardiology": "Khoa Tim mạch",
+    "endocrinology": "Khoa Nội tiết",
+        "hepatology": "Khoa Gan mật",
+    "immunology": "Khoa Miễn dịch",
+    "infectious_diseases": "Khoa Truyền nhiễm",
+        "neurology": "Khoa Thần kinh",
+        "orthopedics": "Khoa Chỉnh hình",
+        "otolaryngology": "Khoa Tai Mũi Họng",
+            "proctology": "Khoa Hậu môn - Trực tràng",
+            "pulmonology": "Khoa Hô hấp",
+            "rheumatology": "Khoa Cơ xương khớp",
+            "urology": "Khoa Tiết niệu",
+    "vascular_medicine": "Khoa Mạch máu",
 }
 
-const VI_DIAGNOSIS = {
+const VI_DIAGNOSIS_MAP = {
 "anti_hev_test": "Xét nghiệm kháng thể HEV",
   "antiâ€‘hav_igm_test": "Xét nghiệm kháng thể IgM kháng HAV",
   "bp_monitoring": "Theo dõi huyết áp",
@@ -438,8 +442,8 @@ const VI_DIAGNOSIS = {
   "viral_load_count": "Đo tải lượng virus",
 };
 
-const VI_TRANSLATE_TREATMENT = {
-    "ace_inhibitors": "Thuốc ức chế men chuyển (ACE)",
+const VI_TREATMENT_MAP = {
+"ace_inhibitors": "Thuốc ức chế men chuyển (ACE)",
   "alcohol_cessation": "Cai rượu",
   "antibiotics": "Kháng sinh",
   "antibiotics_ceftriaxone": "Kháng sinh (Ceftriaxone)",
@@ -517,93 +521,99 @@ function processInputSymptoms(input) {
     let str = Array.isArray(input) ? input.join(" ") : input;
     str = str.toLowerCase();
 
-    // Remove stop words
     VIETNAMESE_STOP_WORDS.forEach(word => {
         const regex = new RegExp(`\\b${word}\\b`, 'gi');
         str = str.replace(regex, '');
     });
-
     str = str.trim().replace(/\s+/g, ' ');
 
-    // Map VI -> EN
     let translated = [];
-    Object.keys(VI_TO_EN)
-        .sort((a, b) => b.length - a.length) // ưu tiên cụm dài
+    // Sử dụng VI_TO_EN_SYMPTOMS thay vì VI_TO_EN chung chung
+    Object.keys(VI_TO_EN_SYMPTOMS)
+        .sort((a, b) => b.length - a.length)
         .forEach(key => {
             if (str.includes(key)) {
-                translated.push(VI_TO_EN[key]);
+                translated.push(VI_TO_EN_SYMPTOMS[key]);
                 str = str.replace(key, '');
             }
         });
 
-    // Nếu không map được từ tiếng Việt, giữ nguyên input (giả sử là tiếng Anh)
     if (translated.length === 0) {
         translated = Array.isArray(input) ? input.map(i => i.toLowerCase()) : [str];
     }
-
     return translated;
 }
-// EN → VI (triệu chứng)
-function translateMatchedList(matched) {
-    return matched.map(en => {
-        const vi = Object.keys(VI_TO_EN).find(k => VI_TO_EN[k] === en);
-        return vi || en;
+function translateMatchedList(matchedEnList) {
+    if (!matchedEnList || matchedEnList.length === 0) return [];
+    
+    return matchedEnList.map(enItem => {
+        // Tìm key (Tiếng Việt) dựa trên value (Tiếng Anh) trong map VI_TO_EN_SYMPTOMS
+        const viKey = Object.keys(VI_TO_EN_SYMPTOMS).find(key => VI_TO_EN_SYMPTOMS[key] === enItem);
+        return viKey || enItem; // Nếu không tìm thấy thì giữ nguyên tiếng Anh
     });
 }
 
-// VI → EN (tên bệnh)
+// EN -> VI (Tên bệnh)
+function translateDiseaseName(name) {
+    return EN_TO_VI_DISEASES[name] || name;
+}
+
+// VI -> EN (Tên bệnh để search)
 function translateDiseaseVItoEN(nameVI) {
     let str = nameVI.toLowerCase().trim();
-
-    // ưu tiên match cụm dài
     const keys = Object.keys(VI_TO_EN_DISEASES).sort((a, b) => b.length - a.length);
-
     for (const key of keys) {
         if (str.includes(key)) {
             return VI_TO_EN_DISEASES[key];
         }
     }
-    return nameVI; // fallback
-}
-// EN → VI (tên bệnh)
-function translateDiseaseName(name) {
-    return EN_TO_VI[name] || name;
-}
-// EN → VI (chẩn đoán)
-function translateDiagnosis(en) {
-    if (!en) return null;
-    return EN_TO_VI_DIAGNOSIS[en.toLowerCase()] || en;
-}
-// EN → VI (điều trị)
-function translateTreatment(en) {
-    if (!en) return null;
-    return EN_TO_VI_TREATMENT[en.toLowerCase()] || en;
-}
-// EN → VI (bác sĩ)
-function translateDoctor(en) {
-    if (!en) return null;
-    return EN_TO_VI_DOCTOR[en.toLowerCase()] || en;
-}
-// EN → VI (chuyên khoa)
-function translateDepartment(en) {
-    if (!en) return null;
-    return EN_TO_VI_DEPARTMENT[en.toLowerCase()] || en;
-}
-// EN → VI (biện pháp phòng ngừa)
-function translatePrecaution(en) {
-    if (!en) return null;
-    return EN_TO_VI_PRECAUTION[en.toLowerCase()] || en;
+    return nameVI; // Trả về nguyên gốc nếu không tìm thấy
 }
 
+// EN -> VI (Chẩn đoán)
+function translateDiagnosis(en) {
+    if (!en) return null;
+    return VI_DIAGNOSIS_MAP[en.toLowerCase()] || en;
+}
+
+// EN -> VI (Điều trị)
+function translateTreatment(en) {
+    if (!en) return null;
+    return VI_TREATMENT_MAP[en.toLowerCase()] || en;
+}
+
+// EN -> VI (Bác sĩ)
+function translateDoctor(en) {
+    if (!en) return null;
+    return VI_TRANSLATE_DOCTORS[en.toLowerCase()] || en;
+}
+
+// EN -> VI (Chuyên khoa)
+function translateDepartment(en) {
+    if (!en) return null;
+    return VI_TRANSLATE_DEPARTMENT[en.toLowerCase()] || en;
+}
+
+// EN -> VI (Lời khuyên)
+function translatePrecaution(en) {
+    if (!en) return null;
+    return VI_TRANSLATE_PRECAUTION[en.toLowerCase()] || en;
+}
 
 module.exports = {
     processInputSymptoms,
-    translateMatchedList,
     translateDiseaseName,
     translateDiseaseVItoEN,
     translateDiagnosis,
     translateTreatment,
     translateDoctor,
     translateDepartment,
-    translatePrecaution
+    translatePrecaution,
+    translateMatchedList,
+    // Export các object gốc nếu cần dùng trực tiếp ở nơi khác
+    VI_TRANSLATE_PRECAUTION,
+    VI_TRANSLATE_DOCTORS,
+    VI_DIAGNOSIS_MAP,
+    VI_TREATMENT_MAP,
+    VI_TRANSLATE_DEPARTMENT
 };

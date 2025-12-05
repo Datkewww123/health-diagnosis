@@ -3,9 +3,9 @@ const {
     translateDiseaseName,
     translateDiseaseVItoEN,
     translateDiagnosis,
-    translateTreatment,
     translateDoctor,
     translateDepartment,
+    translateTreatment,
     translatePrecaution
 } = require("../controller/mapTransaction");
 const History = require('../model/history');
@@ -57,10 +57,9 @@ class DiseasesController{
     }
 
 
-    // lay thong tin chi tiet benh(phai login moi duoc vao xem chi tiet)
- async getDetailed(req, res) {
+      // Lấy chi tiết bệnh
+   async getDetailed(req, res) {
         try {
-            // verifyToken đảm bảo req.user tồn tại
             const { id } = req.params;
 
             const disease = await Diseases.findById(id);
@@ -70,33 +69,60 @@ class DiseasesController{
                 });
             }
 
+            // --- XỬ LÝ DỮ LIỆU ---
+
+            // 1. Triệu chứng: Nếu có trường symptoms_vi trong DB thì dùng, không thì tách từ mảng
             const symptomsList = disease.symptoms_vi
                 ? disease.symptoms_vi.split(";").map(s => s.trim())
-                : [];
+                : (disease.symptoms || []); 
+
+            // 2. Chẩn đoán (Mảng EN -> Mảng VI)
+            // Kiểm tra xem database lưu string hay array. Code này giả định là Array.
+            // Nếu DB lưu string "A, B, C" thì cần split trước.
+            const rawDiagnosis = Array.isArray(disease.diagnosis) ? disease.diagnosis : [disease.diagnosis];
+            const diagnosisVI = rawDiagnosis.map(d => translateDiagnosis(d));
+
+            // 3. Điều trị (Mảng EN -> Mảng VI)
+            const rawTreatment = Array.isArray(disease.treatment) ? disease.treatment : [disease.treatment];
+            const treatmentVI = rawTreatment.map(t => translateTreatment(t));
+
+            // 4. Bác sĩ (Mảng EN -> Mảng VI)
+            const rawDoctor = Array.isArray(disease.doctor) ? disease.doctor : [disease.doctor];
+            const doctorVI = rawDoctor.map(d => translateDoctor(d));
+
+            // 5. Chuyên khoa (String EN -> String VI)
+            const departmentVI = translateDepartment(disease.department);
+
+            // 6. Lời khuyên (String keys -> String VI)
+            const precaution1 = translatePrecaution(disease.Precaution_1);
+            const precaution2 = translatePrecaution(disease.Precaution_2);
+            const precaution3 = translatePrecaution(disease.Precaution_3);
+            const precaution4 = translatePrecaution(disease.Precaution_4);
 
             const detailData = {
                 _id: disease._id,
-                name: disease.name_vi || disease.name,
-                overview: disease.overview_vi || disease.overview,
+                name: translateDiseaseName(disease.name), // Tên tiếng Việt
+                overview: disease.overview_vi || disease.overview, // Ưu tiên overview tiếng Việt nếu có
                 symptoms: symptomsList,
                 causes: disease.causes_vi || disease.causes,
+                
+                diagnosis: diagnosisVI,
+                treatment: treatmentVI,
+                doctor: doctorVI,
+                department: departmentVI,
 
-                diagnosis: translateDiagnosis(disease.diagnosis),
-                treatment: translateTreatment(disease.treatment),
-                doctor: translateDoctor(disease.doctor),
-                department: translateDepartment(disease.department),
-
-                Precaution_1: translatePrecaution(disease.Precaution_1),
-                Precaution_2: translatePrecaution(disease.Precaution_2),
-                Precaution_3: translatePrecaution(disease.Precaution_3),
-                Precaution_4: translatePrecaution(disease.Precaution_4),
+                precaution: [precaution1, precaution2, precaution3, precaution4].filter(p => p), // Gom thành mảng cho gọn
 
                 image_url: disease.image_url
             };
+
             return res.json(detailData);
-        }
-        catch(err){
-            return res.status(500).json({message: err.message});
+
+        } catch (err) {
+            console.error(err);
+            return res.status(500).json({
+                message: "Lỗi khi lấy chi tiết bệnh"
+            });
         }
     }
 }
