@@ -61,7 +61,7 @@ class DiseasesController{
 
 
       // Lấy chi tiết bệnh
-async getDetailed(req, res) {
+    async getDetailed(req, res) {
         try {
             const { id } = req.params;
             const disease = await Diseases.findById(id);
@@ -70,63 +70,65 @@ async getDetailed(req, res) {
                 return res.status(404).json({ message: "Không tìm thấy bệnh!" });
             }
 
+            // === HÀM PHỤ: CẮT CHUỖI VÀ DỊCH DANH SÁCH ===
+            // Giúp xử lý trường hợp DB lưu: "Thuốc A, Thuốc B" thành mảng ["Thuốc A", "Thuốc B"] rồi mới dịch
+            const processListField = (data, translateFunc) => {
+                if (!data) return [];
+                
+                let list = [];
+                if (Array.isArray(data)) {
+                    list = data;
+                } else if (typeof data === 'string') {
+                    // Tách dấu phẩy (,) hoặc chấm phẩy (;) và xóa khoảng trắng thừa
+                    list = data.split(/[,;]/).map(item => item.trim());
+                }
+
+                // Dịch từng món
+                return list.map(item => {
+                    const translated = translateFunc(item);
+                    return translated || item; // Nếu không dịch được thì trả về gốc
+                });
+            };
+
             // --- XỬ LÝ DỮ LIỆU ---
 
-            // A. Xử lý Triệu chứng (Symptoms)
-            // Lấy mảng gốc tiếng Anh, nếu là string thì tách ra
-            let rawSymptoms = disease.symptoms || [];
-            if (typeof rawSymptoms === 'string') {
-                rawSymptoms = rawSymptoms.split(/[,;]/).map(s => s.trim());
+            // 1. Symptoms (Triệu chứng)
+            let symptomsVI = [];
+            if (disease.symptoms_vi) {
+                symptomsVI = disease.symptoms_vi.split(/[,;]/).map(s => s.trim());
+            } else {
+                let rawSymptoms = disease.symptoms;
+                if (typeof rawSymptoms === 'string') rawSymptoms = rawSymptoms.split(/[,;]/).map(s => s.trim());
+                symptomsVI = translateMatchedList(rawSymptoms || []);
             }
-            // Gọi hàm dịch danh sách (EN -> VI)
-            // Lưu ý: Nếu DB có sẵn symptoms_vi thì dùng luôn, còn không thì dịch từ rawSymptoms
-            const symptomsVI = disease.symptoms_vi 
-                ? disease.symptoms_vi.split(/[,;]/).map(s => s.trim())
-                : translateMatchedList(rawSymptoms);
 
+            // 2. Mô tả & Nguyên nhân
+            const descriptionVI = translateDescription(disease.Description || disease.overview);
+            const causesVI = translateRiskFactor(disease.risk_factor || disease.causes);
 
-            // B. Xử lý Mô tả (Overview/Description)
-            // Lấy text gốc -> Gọi hàm dịch
-            const rawDesc = disease.Description || disease.overview;
-            const descriptionVI = translateDescription(rawDesc); // Trả về tiếng Việt hoặc null
+            // 3. CÁC TRƯỜNG DANH SÁCH (QUAN TRỌNG: Dùng hàm processListField mới)
+            const diagnosisVI = processListField(disease.diagnosis, translateDiagnosis);
+            const treatmentVI = processListField(disease.treatment, translateTreatment);
+            const doctorVI    = processListField(disease.doctor, translateDoctor);
 
-
-            // C. Xử lý Nguyên nhân (Causes/Risk Factor)
-            // Lấy text gốc -> Gọi hàm dịch
-            const rawCauses = disease.risk_factor || disease.causes;
-            const causesVI = translateRiskFactor(rawCauses); // Trả về tiếng Việt hoặc null
-
-
-            // D. Xử lý các mảng khác (Chẩn đoán, Điều trị, Bác sĩ...)
-            const diagnosisVI = (Array.isArray(disease.diagnosis) ? disease.diagnosis : [disease.diagnosis])
-                                .map(d => translateDiagnosis(d)).filter(Boolean);
-
-            const treatmentVI = (Array.isArray(disease.treatment) ? disease.treatment : [disease.treatment])
-                                .map(t => translateTreatment(t)).filter(Boolean);
-
-            const doctorVI = (Array.isArray(disease.doctor) ? disease.doctor : [disease.doctor])
-                                .map(d => translateDoctor(d)).filter(Boolean);
-
-
-            // E. Xử lý các trường đơn lẻ
+            // 4. Các trường đơn
             const departmentVI = translateDepartment(disease.department);
+            
+            // 5. Lời khuyên
             const precaution1 = translatePrecaution(disease.Precaution_1);
             const precaution2 = translatePrecaution(disease.Precaution_2);
             const precaution3 = translatePrecaution(disease.Precaution_3);
             const precaution4 = translatePrecaution(disease.Precaution_4);
 
 
-            // --- ĐÓNG GÓI DỮ LIỆU TRẢ VỀ ---
+            // --- TRẢ VỀ KẾT QUẢ ---
             const detailData = {
                 _id: disease._id,
                 name: translateDiseaseName(disease.name),
                 
-                // Logic: Nếu dịch được (có trong Map) thì lấy tiếng Việt, không thì lấy tiếng Anh gốc
-                overview: descriptionVI || rawDesc,
-                
+                overview: descriptionVI || disease.Description || disease.overview,
                 symptoms: symptomsVI,
-                
-                causes: causesVI || rawCauses,
+                causes: causesVI || disease.risk_factor || disease.causes,
                 
                 diagnosis: diagnosisVI,
                 treatment: treatmentVI,

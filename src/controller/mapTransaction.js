@@ -591,6 +591,14 @@ const VI_RISK_FACTOR_MAP = {
     "humid weather": "Thời tiết ẩm ướt"
 };
 
+// --- HÀM HỖ TRỢ: CHUẨN HÓA KEY ---
+// Chuyển "General Practice" -> "general_practice" để khớp với Map
+function normalizeKeyToSnakeCase(str) {
+    if (!str) return "";
+    // Chuyển thành chữ thường, xóa khoảng trắng thừa, thay dấu cách bằng dấu gạch dưới, thay dấu gạch ngang bằng gạch dưới
+    return str.toString().toLowerCase().trim().replace(/[\s\-]+/g, '_');
+}
+
 function processInputSymptoms(input) {
     let str = Array.isArray(input) ? input.join(" ") : input;
     str = str.toLowerCase();
@@ -647,7 +655,11 @@ function translateDiseaseVItoEN(nameVI) {
 // EN -> VI (Chẩn đoán)
 function translateDiagnosis(en) {
     if (!en) return null;
-    return VI_DIAGNOSIS_MAP[en.toLowerCase()] || en;
+    const cleanInput = en.toLowerCase().trim();
+    const snakeInput = normalizeKeyToSnakeCase(en); 
+
+    // Thử tìm trực tiếp hoặc tìm theo kiểu snake_case
+    return VI_DIAGNOSIS_MAP[cleanInput] || VI_DIAGNOSIS_MAP[snakeInput] || en;
 }
 //  HÀM DỊCH MÔ TẢ 
 function translateDescription(en) {
@@ -676,13 +688,19 @@ function translateRiskFactor(en) {
 // EN -> VI (Điều trị)
 function translateTreatment(en) {
     if (!en) return null;
-    return VI_TREATMENT_MAP[en.toLowerCase()] || en;
+    const cleanInput = en.toLowerCase().trim();
+    const snakeInput = normalizeKeyToSnakeCase(en);
+
+    return VI_TREATMENT_MAP[cleanInput] || VI_TREATMENT_MAP[snakeInput] || en;
 }
 
 // EN -> VI (Bác sĩ)
 function translateDoctor(en) {
     if (!en) return null;
-    return VI_TRANSLATE_DOCTORS[en.toLowerCase()] || en;
+    const cleanInput = en.toLowerCase().trim();
+    const snakeInput = normalizeKeyToSnakeCase(en);
+
+    return VI_TRANSLATE_DOCTORS[cleanInput] || VI_TRANSLATE_DOCTORS[snakeInput] || en;
 }
 
 // EN -> VI (Chuyên khoa)
