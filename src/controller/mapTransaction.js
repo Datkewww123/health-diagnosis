@@ -517,6 +517,80 @@ const VI_TREATMENT_MAP = {
   "vestibular_rehabilitation_therapy": "Phục hồi chức năng tiền đình",
 };
 
+const VI_DESCRIPTION_MAP = {
+    // Dựa trên danh sách bệnh trong EN_TO_VI_DISEASES
+    "fungal infection is a common skin condition caused by fungus": "Nhiễm nấm là bệnh ngoài da phổ biến do vi nấm gây ra, thường gây ngứa và khó chịu.",
+    "an allergy is an immune system response to a foreign substance that's not typically harmful to your body": "Dị ứng là phản ứng của hệ miễn dịch đối với một chất lạ thường không gây hại cho cơ thể.",
+    "gerd (gastroesophageal reflux disease) is a digestive disorder that affects the ring of muscle between your esophagus and your stomach": "Trào ngược dạ dày thực quản (GERD) là rối loạn tiêu hóa ảnh hưởng đến cơ vòng giữa thực quản và dạ dày.",
+    "chronic cholestasis is a condition where bile cannot flow from the liver to the duodenum": "Ứ mật mạn tính là tình trạng mật không thể lưu thông từ gan xuống tá tràng.",
+    "drug reaction is an allergic reaction to a medication": "Phản ứng thuốc là tình trạng dị ứng hoặc tác dụng phụ không mong muốn do dùng thuốc.",
+    "peptic ulcer disease represents a break in the lining of the stomach or first part of the small intestine": "Viêm loét dạ dày tá tràng là tình trạng niêm mạc dạ dày hoặc phần đầu ruột non bị tổn thương gây loét.",
+    "aids is a chronic, potentially life-threatening condition caused by the human immunodeficiency virus (hiv)": "AIDS là hội chứng suy giảm miễn dịch mắc phải, giai đoạn cuối của nhiễm HIV, đe dọa đến tính mạng.",
+    "diabetes is a disease that occurs when your blood glucose, also called blood sugar, is too high": "Tiểu đường là bệnh lý xảy ra khi lượng đường trong máu (glucose) quá cao.",
+    "gastroenteritis is an inflammation of the lining of the intestines caused by a virus, bacteria or parasites": "Viêm dạ dày ruột là tình trạng viêm niêm mạc ruột do virus, vi khuẩn hoặc ký sinh trùng gây ra.",
+    "bronchial asthma is a medical condition which causes the airway path of the lungs to swell and narrow": "Hen phế quản là bệnh lý khiến đường dẫn khí vào phổi bị sưng và hẹp lại, gây khó thở.",
+    "hypertension is a chronic medical condition in which the blood pressure in the arteries is persistently elevated": "Tăng huyết áp là bệnh lý mãn tính trong đó áp lực máu trong động mạch tăng cao liên tục.",
+    "migraine is a primary headache disorder characterized by recurrent headaches that are moderate to severe": "Đau nửa đầu (Migraine) là rối loạn đau đầu nguyên phát, đặc trưng bởi các cơn đau tái diễn từ vừa đến nặng.",
+    "cervical spondylosis is a general term for age-related wear and tear affecting the spinal disks in your neck": "Thoái hóa đốt sống cổ là thuật ngữ chỉ sự hao mòn do tuổi tác ảnh hưởng đến các đĩa đệm cột sống cổ.",
+    "paralysis is the loss of muscle function in part of your body": "Liệt là tình trạng mất chức năng cơ ở một phần cơ thể (thường do xuất huyết não).",
+    "jaundice is a yellowish or greenish pigmentation of the skin and whites of the eyes due to high bilirubin levels": "Vàng da là tình trạng da và lòng trắng mắt chuyển màu vàng do nồng độ bilirubin tăng cao.",
+    "malaria is a mosquito-borne infectious disease that affects humans and other animals": "Sốt rét là bệnh truyền nhiễm do ký sinh trùng lây truyền qua vết đốt của muỗi Anopheles.",
+    "chickenpox is a highly contagious disease caused by the varicella-zoster virus (vzv)": "Thủy đậu là bệnh truyền nhiễm rất dễ lây lan do virus Varicella-zoster gây ra.",
+    "dengue is a mosquito-borne tropical disease caused by the dengue virus": "Sốt xuất huyết là bệnh nhiệt đới lây truyền qua muỗi do virus Dengue gây ra.",
+    "typhoid fever is a bacterial infection due to a specific type of salmonella": "Thương hàn là bệnh nhiễm trùng do vi khuẩn Salmonella typhi gây ra, lây qua đường ăn uống.",
+    "hepatitis a is a highly contagious liver infection caused by the hepatitis a virus": "Viêm gan A là bệnh nhiễm trùng gan rất dễ lây lan do virus viêm gan A gây ra.",
+    "hepatitis b is an infection of your liver. it can cause scarring of the organ, liver failure, and cancer": "Viêm gan B là bệnh nhiễm trùng gan có thể gây xơ gan, suy gan và ung thư gan.",
+    "hepatitis c is an infection caused by a virus that attacks the liver and leads to inflammation": "Viêm gan C là bệnh do virus tấn công gan gây viêm và tổn thương gan.",
+    "hepatitis d is a liver infection you can get only if you have hepatitis b": "Viêm gan D là bệnh nhiễm trùng gan chỉ xảy ra ở người đã mắc viêm gan B.",
+    "hepatitis e is a liver infection caused by the hepatitis e virus": "Viêm gan E là bệnh nhiễm trùng gan do virus viêm gan E gây ra, thường lây qua nước uống nhiễm bẩn.",
+    "alcoholic hepatitis is a diseased, inflammatory condition of the liver caused by heavy alcohol consumption": "Viêm gan do rượu là tình trạng viêm gan do uống nhiều rượu bia trong thời gian dài.",
+    "tuberculosis (tb) is an infectious disease usually caused by the bacterium mycobacterium tuberculosis": "Lao (TB) là bệnh truyền nhiễm thường do vi khuẩn Mycobacterium tuberculosis gây ra, chủ yếu ở phổi.",
+    "common cold is a viral infection of your nose and throat (upper respiratory tract)": "Cảm lạnh thông thường là nhiễm trùng virus ở mũi và họng (đường hô hấp trên).",
+    "pneumonia is an infection that inflames the air sacs in one or both lungs": "Viêm phổi là tình trạng nhiễm trùng gây viêm các túi khí ở một hoặc cả hai phổi.",
+    "dimorphic hemorrhoids (piles) are swollen veins in your anus and lower rectum": "Bệnh trĩ là tình trạng sưng các tĩnh mạch ở hậu môn và trực tràng dưới.",
+    "heart attack occurs when the flow of blood to the heart is blocked": "Nhồi máu cơ tim (đau tim) xảy ra khi dòng máu đến tim bị tắc nghẽn đột ngột.",
+    "varicose veins are gnarled, enlarged veins, most commonly appearing in the legs and feet": "Suy giãn tĩnh mạch là tình trạng tĩnh mạch bị xoắn, phình to, thường gặp ở chân và bàn chân.",
+    "hypothyroidism is a condition in which the thyroid gland doesn't produce enough thyroid hormone": "Suy giáp là tình trạng tuyến giáp không sản xuất đủ hormone tuyến giáp.",
+    "hyperthyroidism occurs when your thyroid gland produces too much of the hormone thyroxine": "Cường giáp xảy ra khi tuyến giáp sản xuất quá nhiều hormone thyroxine.",
+    "hypoglycemia is a condition in which your blood sugar (glucose) level is lower than normal": "Hạ đường huyết là tình trạng lượng đường trong máu thấp hơn mức bình thường.",
+    "osteoarthritis is the most common form of arthritis, affecting millions of people worldwide": "Thoái hóa khớp là dạng viêm khớp phổ biến nhất, ảnh hưởng đến sụn khớp.",
+    "arthritis is the swelling and tenderness of one or more of your joints": "Viêm khớp là tình trạng sưng và đau tại một hoặc nhiều khớp.",
+    "vertigo (paroxysmal positional vertigo) is a sensation of feeling off balance": "Chóng mặt kịch phát lành tính (BPPV) là cảm giác mất thăng bằng hoặc xoay tròn đột ngột.",
+    "acne is a skin condition that occurs when your hair follicles become plugged with oil and dead skin cells": "Mụn trứng cá là bệnh da liễu xảy ra khi nang lông bị bít tắc bởi dầu và tế bào chết.",
+    "urinary tract infection is an infection in any part of your urinary system": "Nhiễm trùng đường tiết niệu là tình trạng nhiễm trùng ở bất kỳ bộ phận nào của hệ tiết niệu.",
+    "psoriasis is a skin disease that causes red, itchy scaly patches, most commonly on the knees, elbows, trunk and scalp": "Vảy nến là bệnh da liễu gây ra các mảng đỏ, ngứa và đóng vảy, thường ở đầu gối, khuỷu tay và da đầu.",
+    "impetigo is a common and highly contagious skin infection that mainly affects infants and children": "Chốc lở là bệnh nhiễm trùng da phổ biến và dễ lây lan, thường gặp ở trẻ sơ sinh và trẻ nhỏ."
+};
+
+const VI_RISK_FACTOR_MAP = {
+    "age": "Tuổi tác",
+    "gender": "Giới tính",
+    "genetics": "Di truyền",
+    "family history": "Tiền sử gia đình",
+    "smoking": "Hút thuốc lá",
+    "alcohol consumption": "Tiêu thụ rượu bia",
+    "obesity": "Béo phì",
+    "diet": "Chế độ ăn uống",
+    "physical inactivity": "Lười vận động",
+    "stress": "Căng thẳng (Stress)",
+    "high blood pressure": "Huyết áp cao",
+    "high cholesterol": "Cholesterol cao",
+    "diabetes": "Tiểu đường",
+    "exposure to toxins": "Tiếp xúc với độc tố",
+    "unsafe sex": "Quan hệ tình dục không an toàn",
+    "poor hygiene": "Vệ sinh kém",
+    "contaminated water": "Nguồn nước ô nhiễm",
+    "mosquito bites": "Vết muỗi đốt",
+    "travel history": "Lịch sử du lịch (đến vùng dịch)",
+    "weak immune system": "Hệ miễn dịch suy yếu",
+    "prolonged standing": "Đứng lâu",
+    "heavy lifting": "Mang vác nặng",
+    "sun exposure": "Tiếp xúc nhiều với ánh nắng",
+    "allergens": "Các chất gây dị ứng (phấn hoa, lông thú...)",
+    "cold weather": "Thời tiết lạnh",
+    "humid weather": "Thời tiết ẩm ướt"
+};
+
 function processInputSymptoms(input) {
     let str = Array.isArray(input) ? input.join(" ") : input;
     str = str.toLowerCase();
@@ -575,6 +649,29 @@ function translateDiagnosis(en) {
     if (!en) return null;
     return VI_DIAGNOSIS_MAP[en.toLowerCase()] || en;
 }
+//  HÀM DỊCH MÔ TẢ 
+function translateDescription(en) {
+    if (!en) return null;
+    const key = en.toLowerCase().trim();
+    // Thử tìm chính xác
+    if (VI_DESCRIPTION_MAP[key]) {
+        return VI_DESCRIPTION_MAP[key];
+    }
+    // Nếu không tìm thấy chính xác, trả về nguyên gốc (hoặc có thể xử lý mờ nếu cần)
+    return en;
+}
+
+//  HÀM DỊCH YẾU TỐ NGUY CƠ 
+function translateRiskFactor(en) {
+    if (!en) return null;
+    // Nếu là mảng
+    if (Array.isArray(en)) {
+        return en.map(item => translateRiskFactor(item));
+    }
+    
+    const key = en.toLowerCase().trim();
+    return VI_RISK_FACTOR_MAP[key] || en;
+}
 
 // EN -> VI (Điều trị)
 function translateTreatment(en) {
@@ -610,6 +707,8 @@ module.exports = {
     translateDepartment,
     translatePrecaution,
     translateMatchedList,
+    translateDescription,
+    translateRiskFactor,
     // Export các object gốc nếu cần dùng trực tiếp ở nơi khác
     VI_TRANSLATE_PRECAUTION,
     VI_TRANSLATE_DOCTORS,
