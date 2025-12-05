@@ -621,7 +621,17 @@ const VI_RISK_FACTOR_MAP = {
     "cold weather": "Thời tiết lạnh",
     "humid weather": "Thời tiết ẩm ướt"
 };
+// Chuẩn hóa chuỗi mô tả (Xóa xuống dòng, xóa khoảng trắng thừa) -> Dùng cho Description/Causes
+function normalizeString(str) {
+    if (!str) return "";
+    return str.toString()
+        .toLowerCase()           
+        .replace(/[\r\n]+/g, ' ') 
+        .replace(/\s+/g, ' ')     
+        .trim();
+};
 
+// Chuẩn hóa key (dùng cho Key trong Maps)
 function normalizeKeyToSnakeCase(str) {
     if (!str) return "";
     return str.toString()
