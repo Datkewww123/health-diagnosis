@@ -14,8 +14,31 @@ const {
 const History = require('../model/history');
 
 class DiseasesController{
+
+
+    // --- HÀM PHỤ: CẮT CHUỖI VÀ DỊCH (Đưa ra ngoài để tái sử dụng) ---
+        _processListField(data, translateFunc) {
+        if (!data) return [];
+        let list = [];
+        
+        // 1. Chuẩn hóa thành mảng
+        if (Array.isArray(data)) {
+            list = data;
+        } else if (typeof data === 'string') {
+            // Tách theo phẩy, chấm phẩy, xuống dòng
+            list = data.split(/[,;\n]/).map(item => item.trim()).filter(Boolean);
+        }
+
+        // 2. Dịch từng món
+        return list.map(item => {
+            const translated = translateFunc(item);
+            return translated || item; // Giữ gốc nếu không dịch được
+        });
+    }
+
+
      // Tìm bệnh theo tên (input tiếng Việt, output id + tên tiếng Việt)
-    async searchDisease(req, res) {
+        async searchDisease(req, res) {
         try {
             const { name } = req.body;
             if (!name) {
@@ -60,66 +83,44 @@ class DiseasesController{
     }
 
 
-      // Lấy chi tiết bệnh
-async getDetailed(req, res) {
+        // Lấy chi tiết bệnh
+        async getDetailed(req, res) {
         try {
             const { id } = req.params;
             const disease = await Diseases.findById(id);
+
             if (!disease) return res.status(404).json({ message: "Không tìm thấy bệnh!" });
 
-            // === QUAN TRỌNG: HÀM CẮT CHUỖI VÀ DỊCH ===
-            // Hàm này sẽ cắt "A, B" thành ["A", "B"] rồi mới dịch từng cái
-            const processListField = (data, translateFunc) => {
-                if (!data) return [];
-                
-                let list = [];
-                // Bước 1: Chuẩn hóa dữ liệu đầu vào thành mảng
-                if (Array.isArray(data)) {
-                    list = data;
-                } else if (typeof data === 'string') {
-                    // Cắt theo dấu phẩy (,) hoặc chấm phẩy (;) hoặc xuống dòng (\n)
-                    list = data.split(/[,;\n]/).map(item => item.trim()).filter(item => item.length > 0);
-                }
-
-                // Bước 2: Dịch từng phần tử
-                return list.map(item => {
-                    // Gọi hàm dịch từ mapTransaction
-                    const translated = translateFunc(item);
-                    // Nếu dịch được thì lấy, không thì giữ nguyên gốc
-                    return translated || item; 
-                });
-            };
-
-            // --- XỬ LÝ DỮ LIỆU ---
-
-            // 1. Symptoms
+            // A. Xử lý Symptoms (Triệu chứng)
             let symptomsVI = [];
             if (disease.symptoms_vi) {
                 symptomsVI = disease.symptoms_vi.split(/[,;]/).map(s => s.trim());
             } else {
                 let rawSymptoms = disease.symptoms;
-                if (typeof rawSymptoms === 'string') rawSymptoms = rawSymptoms.split(/[,;]/).map(s => s.trim());
+                if (typeof rawSymptoms === 'string') {
+                    rawSymptoms = rawSymptoms.split(/[,;\n]/).map(s => s.trim()).filter(Boolean);
+                }
                 symptomsVI = translateMatchedList(rawSymptoms || []);
             }
 
-            // 2. Các trường đơn
+            // B. Xử lý các trường danh sách (Dùng hàm phụ _processListField)
+            // Lưu ý: Phải dùng this._processListField vì đã đưa hàm vào class
+            const diagnosisVI = this._processListField(disease.diagnosis, translateDiagnosis);
+            const treatmentVI = this._processListField(disease.treatment, translateTreatment);
+            const doctorVI    = this._processListField(disease.doctor, translateDoctor); 
+
+            // C. Các trường văn bản/đơn
             const descriptionVI = translateDescription(disease.Description || disease.overview);
             const causesVI = translateRiskFactor(disease.risk_factor || disease.causes);
             const departmentVI = translateDepartment(disease.department);
 
-            // 3. CÁC TRƯỜNG DANH SÁCH (Dùng hàm processListField ở trên)
-            // Đây là chỗ giúp Doctor và Diagnosis dịch được
-            const diagnosisVI = processListField(disease.diagnosis, translateDiagnosis);
-            const treatmentVI = processListField(disease.treatment, translateTreatment);
-            const doctorVI    = processListField(disease.doctor, translateDoctor);
-
-            // 4. Precaution
+            // D. Precaution
             const precaution1 = translatePrecaution(disease.Precaution_1);
             const precaution2 = translatePrecaution(disease.Precaution_2);
             const precaution3 = translatePrecaution(disease.Precaution_3);
             const precaution4 = translatePrecaution(disease.Precaution_4);
 
-            const detailData = {
+            return res.json({
                 _id: disease._id,
                 name: translateDiseaseName(disease.name),
                 overview: descriptionVI || disease.Description || disease.overview,
@@ -134,13 +135,11 @@ async getDetailed(req, res) {
                 Precaution_3: precaution3,
                 Precaution_4: precaution4,
                 image_url: disease.image_url
-            };
-
-            return res.json(detailData);
+            });
 
         } catch (err) {
             console.error("Lỗi lấy chi tiết:", err);
-            return res.status(500).json({ message: "Lỗi server" });
+            return res.status(500).json({ message: "Lỗi server khi lấy chi tiết bệnh" });
         }
     }
 }
