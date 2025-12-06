@@ -56,11 +56,13 @@ class SymptomsController {
 
 
             // luu lịch sử dự đoán
-            if(req.user){
+            if (req.user) {
                 await History.create({
-                userId: req.user.id,
-                type: "predict",
-                inputSymptoms: symptoms,
+                    user: req.user.id,        // đúng tên field schema
+                    type: "predict",
+                    inputSymptoms: symptoms,  // mảng triệu chứng gốc
+                    diseaseName: filtered[0]?.name || "Không xác định",
+                    result: filtered,         //  LƯU FULL KẾT QUẢ
                 });
             }
 
@@ -77,20 +79,24 @@ class SymptomsController {
     }
     async getHistory(req, res){
         try{
-            if(!req.user){
-                return res.status(401).json({message:"Bạn chưa đăng nhập!"});
+            if (!req.user) {
+                return res.status(401).json({ message: "Bạn chưa đăng nhập!" });
             }
-            const history = (await History.find({userID: req.user.id})).sort({createAt: -1});
+
+            const history = await History.find({ user: req.user.id })
+                .sort({ createdAt: -1 });
+
             return res.json({
                 message: "Lịch sử dự đoán",
                 count: history.length,
                 data: history
-            })
-        }
-        catch(err){
-            return res.status(500).json({message: err.message});
+            });
+
+        } catch (err) {
+            return res.status(500).json({ message: err.message });
         }
     }
 }
+
 
 module.exports = new SymptomsController();
