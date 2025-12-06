@@ -56,14 +56,21 @@ class SymptomsController {
 
 
             // luu lịch sử dự đoán
-            if (req.user) {
-            await History.create({
-            user: req.user._id,
-            type: "predict",
-            inputSymptoms: symptoms,  
-            result: filtered          
-    });
-}
+          if (req.user) {
+                try {
+                    await History.create({
+                        user: req.user._id || req.user.id,
+                        type: "predict",
+                        inputSymptoms: symptoms,
+                        diseaseName: "unknown" // chưa chọn bệnh
+                    });
+                } catch (err) {
+                    console.error("Lỗi lưu history predict:", err.message);
+                    // Không trả lỗi cho client
+                }
+            } else {
+                console.log("Guest dự đoán, không lưu history");
+            }
 
             // tra ve ket qua
             return res.json({
