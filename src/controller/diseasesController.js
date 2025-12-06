@@ -41,14 +41,23 @@ class DiseasesController{
 
             }));
             // Lưu lịch sử tìm kiếm
-          if (req.user) {
+if (req.user && formattedData.length > 0) {
+    try {
+        // Lấy tên bệnh user chọn để lưu history
+        const diseaseName = formattedData[0].name || "unknown";
+
         await History.create({
-        user: req.user._id,
-        type: "search",
-        searchName: name,     
-        result: formattedData     
-    });
+            user: req.user._id || req.user.id,
+            type: "search",
+            diseaseName: diseaseName,
+            inputSymptoms: []  // search không cần lưu symptoms
+        });
+    } catch (err) {
+        console.error("Lỗi lưu history search:", err.message);
+        // Không trả lỗi cho client
+    }
 }
+
             return res.json({
                 message: 'Kết quả tìm kiếm',
                 count: formattedData.length,
