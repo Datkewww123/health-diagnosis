@@ -41,14 +41,14 @@ class DiseasesController{
 
             }));
             // Lưu lịch sử tìm kiếm
-           if (req.user) {
-                await History.create({
-                    user: req.user._id,         
-                    type: "search",
-                    diseaseName: name,             // lưu tên bệnh user tìm
-                    result: formattedData,         // LƯU KẾT QUẢ
-                });
-            }
+          if (req.user) {
+        await History.create({
+        user: req.user._id,
+        type: "search",
+        searchName: name,     
+        result: formattedData     
+    });
+}
             return res.json({
                 message: 'Kết quả tìm kiếm',
                 count: formattedData.length,
@@ -141,17 +141,17 @@ class DiseasesController{
             return res.status(500).json({ message: "Lỗi server khi lấy chi tiết bệnh" });
         }
     }
-    async getSearchHistory(req, res) {
+ async getSearchHistory(req, res) {
     try {
         if (!req.user) {
             return res.status(401).json({ message: "Bạn chưa đăng nhập!" });
         }
 
         const history = await History.find({
-            userId: req.user._id,
+            user: req.user._id,      
             type: "search"
         })
-        .sort({ createdAt: -1 });
+        .sort({ createdAt: -1 });   
 
         return res.json({
             message: "Lịch sử tìm kiếm bệnh",
@@ -162,7 +162,6 @@ class DiseasesController{
         return res.status(500).json({ message: err.message });
     }
 }
-
 }
 
 module.exports = new DiseasesController();
