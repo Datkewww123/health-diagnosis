@@ -59,7 +59,7 @@ class DiseasesController{
         }
     }
       // Lấy chi tiết bệnh
-async getDetailed(req, res) {
+        async getDetailed(req, res) {
         try {
             const { id } = req.params;
             const disease = await Diseases.findById(id);
@@ -124,38 +124,44 @@ async getDetailed(req, res) {
                 overview: descriptionVI || disease.Description || disease.overview,
                 symptoms: symptomsVI,
                 causes: causesVI || disease.risk_factor || disease.causes,
-
-            
-
                 diagnosis: diagnosisVI,
                 treatment: treatmentVI,
                 doctor: doctorVI,
                 department: departmentVI,
-
                 Precaution_1: precaution1,
                 Precaution_2: precaution2,
                 Precaution_3: precaution3,
                 Precaution_4: precaution4,
-
                 image_url: disease.image_url
 
             };
-
-
-
             return res.json(detailData);
-
-
-
         } catch (err) {
-
             console.error("Lỗi lấy chi tiết:", err);
-
             return res.status(500).json({ message: "Lỗi server khi lấy chi tiết bệnh" });
-
+        }
+    }
+    async getSearchHistory(req, res) {
+    try {
+        if (!req.user) {
+            return res.status(401).json({ message: "Bạn chưa đăng nhập!" });
         }
 
+        const history = await History.find({
+            userId: req.user._id,
+            type: "search"
+        })
+        .sort({ createdAt: -1 });
+
+        return res.json({
+            message: "Lịch sử tìm kiếm bệnh",
+            count: history.length,
+            data: history
+        });
+    } catch (err) {
+        return res.status(500).json({ message: err.message });
     }
+}
 
 }
 

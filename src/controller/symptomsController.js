@@ -75,6 +75,22 @@ class SymptomsController {
             return res.status(500).json({ message: err.message });
         }
     }
+    async getHistory(req, res){
+        try{
+            if(!req.user){
+                return res.status(401).json({message:"Bạn chưa đăng nhập!"});
+            }
+            const history = (await History.find({userID: req.user.id})).sort({createAt: -1});
+            return res.json({
+                message: "Lịch sử dự đoán",
+                count: history.length,
+                data: history
+            })
+        }
+        catch(err){
+            return res.status(500).json({message: err.message});
+        }
+    }
 }
 
 module.exports = new SymptomsController();
