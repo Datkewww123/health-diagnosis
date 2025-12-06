@@ -56,17 +56,16 @@ class SymptomsController {
 
 
             // luu lịch sử dự đoán
-          if (req.user) {
+if (req.user) {
                 try {
                     await History.create({
-                        user: req.user._id || req.user.id,
+                        user: req.user._id,
                         type: "predict",
-                        inputSymptoms: symptoms,
-                        diseaseName: "unknown" // chưa chọn bệnh
+                        inputSymptoms: Array.isArray(symptoms) ? symptoms : [symptoms],
+                        diseaseName: "unknown"
                     });
                 } catch (err) {
                     console.error("Lỗi lưu history predict:", err.message);
-                    // Không trả lỗi cho client
                 }
             } else {
                 console.log("Guest dự đoán, không lưu history");
@@ -83,24 +82,14 @@ class SymptomsController {
             return res.status(500).json({ message: err.message });
         }
     }
-     async getHistory(req, res){
-        try{
-            if (!req.user) {
-                return res.status(401).json({ message: "Bạn chưa đăng nhập!" });
-            }
+    async getHistory(req, res) {
+        try {
+            if (!req.user) return res.status(401).json({ message: "Bạn chưa đăng nhập!" });
 
-            const history = await History.find({
-                user: req.user._id,
-                type: "predict"
-            })
-            .sort({ createdAt: -1 });
+            const history = await History.find({ user: req.user._id, type: "predict" })
+                .sort({ createdAt: -1 });
 
-            return res.json({
-                message: "Lịch sử dự đoán",
-                count: history.length,
-                data: history
-            });
-
+            return res.json({ message: "Lịch sử dự đoán", count: history.length, data: history });
         } catch (err) {
             return res.status(500).json({ message: err.message });
         }

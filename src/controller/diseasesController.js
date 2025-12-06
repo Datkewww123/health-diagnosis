@@ -41,20 +41,17 @@ class DiseasesController{
 
             }));
             // Lưu lịch sử tìm kiếm
-                if (req.user && formattedData.length > 0) {
-                (async () => {
-                    try {
-                        const diseaseName = formattedData[0].name || "unknown";
-                        await History.create({
-                            user: req.user._id,
-                            type: "search",
-                            diseaseName,
-                            inputSymptoms: [] // search không cần lưu symptoms
-                        });
-                    } catch (err) {
-                        console.error("Lỗi lưu history search:", err.message);
-                    }
-                })();
+            if (req.user && formattedData.length > 0) {
+                try {
+                    await History.create({
+                        user: req.user._id,
+                        type: "search",
+                        diseaseName: formattedData[0].name || "unknown",
+                        inputSymptoms: []
+                    });
+                } catch (err) {
+                    console.error("Lỗi lưu history search:", err.message);
+                }
             } else if (!req.user) {
                 console.log("Guest tìm kiếm, không lưu history");
             }
@@ -151,27 +148,18 @@ class DiseasesController{
             return res.status(500).json({ message: "Lỗi server khi lấy chi tiết bệnh" });
         }
     }
- async getSearchHistory(req, res) {
-    try {
-        if (!req.user) {
-            return res.status(401).json({ message: "Bạn chưa đăng nhập!" });
+  async getSearchHistory(req, res) {
+        try {
+            if (!req.user) return res.status(401).json({ message: "Bạn chưa đăng nhập!" });
+
+            const history = await History.find({ user: req.user._id, type: "search" })
+                .sort({ createdAt: -1 });
+
+            return res.json({ message: "Lịch sử tìm kiếm", count: history.length, data: history });
+        } catch (err) {
+            return res.status(500).json({ message: err.message });
         }
-
-        const history = await History.find({
-            user: req.user._id,      
-            type: "search"
-        })
-        .sort({ createdAt: -1 });   
-
-        return res.json({
-            message: "Lịch sử tìm kiếm bệnh",
-            count: history.length,
-            data: history
-        });
-    } catch (err) {
-        return res.status(500).json({ message: err.message });
     }
-}
 }
 
 module.exports = new DiseasesController();
