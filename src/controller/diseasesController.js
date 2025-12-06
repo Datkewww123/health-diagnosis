@@ -41,13 +41,13 @@ class DiseasesController{
 
             }));
             // Lưu lịch sử tìm kiếm
-            if(req.user){
+           if (req.user) {
                 await History.create({
-                    userId: req.user._id,
+                    user: req.user._id,         
                     type: "search",
-                    diseaseName: name,
-                    time: new Date()
-                })
+                    diseaseName: name,             // lưu tên bệnh user tìm
+                    result: formattedData,         // LƯU KẾT QUẢ
+                });
             }
             return res.json({
                 message: 'Kết quả tìm kiếm',
@@ -66,7 +66,7 @@ class DiseasesController{
             if (!disease) {
                 return res.status(404).json({ message: "Không tìm thấy bệnh!" });
             }
-            // === HÀM PHỤ: CẮT CHUỖI VÀ DỊCH DANH SÁCH ===
+            // HÀM PHỤ: CẮT CHUỖI VÀ DỊCH DANH SÁCH 
             // Tác dụng: Biến chuỗi "A, B, C." thành mảng [A, B, C] rồi dịch từng cái
             const processListField = (data, translateFunc) => {
                 if (!data) return [];
