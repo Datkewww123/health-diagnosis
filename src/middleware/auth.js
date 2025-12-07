@@ -34,16 +34,4 @@ const optionalAuth = (req, res, next) => {
     }
     next();
 }
-// admin only
-const isAdmin = (req, res, next) => { 
-      if (!req.user) {
-        return res.status(401).json({ message: "Unauthorized, no user info" });
-    }
-    
-    //kiem tra xem co phai admin khong
-    if(req.user.role !== "admin"){
-        return res.status(403).json({message:"Access Denied, only for admin!"});
-    }
-    next();
-}
-module.exports = {verifyToken, isAdmin, optionalAuth};
+module.exports = {verifyToken, optionalAuth};

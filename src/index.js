@@ -10,6 +10,7 @@ const app = express(); // tao 1 app chay tren framework express
 const authRoutes = require('./routes/auth'); // import auth tu router
 const symptomRoutes = require('./routes/symptoms'); // import symptoms từ router
 const diseasesRoutes = require('./routes/disease'); // import diseases tu router
+const userRoutes = require('./routes/user') // lay thong tin, update user tu router
 // ket nối db
 connectDB();
 
@@ -23,6 +24,7 @@ app.use(express.json());
 app.use('/api/auth', authRoutes); // dung router cho api
 app.use('/api/symptoms', symptomRoutes); // duong dan den symptoms
 app.use('/api/diseases', diseasesRoutes); // duong dan den diseases
+app.use('/api/user', userRoutes) // duong dan den user
 
 
 // route trang chu
