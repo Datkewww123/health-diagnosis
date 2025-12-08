@@ -25,7 +25,7 @@ app.use(express.json());
 app.use('/api/auth', authRoutes); // dung router cho api
 app.use('/api/symptoms', symptomRoutes); // duong dan den symptoms
 app.use('/api/diseases', diseasesRoutes); // duong dan den diseases
-app.use('/api', userRoutes) // duong dan den user
+app.use('/api/user', userRoutes) // duong dan den user
 app.use('/api/admin', adminRoutes) // duong dan den admin
 
 
