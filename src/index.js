@@ -4,7 +4,8 @@ require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 const connectDB = require('./config/database'); //import ham ket noi mongodb
 const cors = require('cors'); //cho phép FE truy cập API từ domain khác.
 const app = express(); // tao 1 app chay tren framework express
-
+const setupSwagger = require('./swagger'); // src/swagger.js
+setupSwagger(app);
 
 //import route  
 const authRoutes = require('./routes/auth'); // import auth tu router
