@@ -15,15 +15,12 @@ class SymptomsController {
                 return res.status(400).json({ message: "Vui lòng nhập triệu chứng!" });
             }
 
-            // Xử lý input
             const translatedKeywords = processInputSymptoms(symptoms);
 
-            // Lấy toàn bộ bệnh
             const all = await Diseases.find({})
                 .select("name symptoms")
                 .lean();
 
-            // Tính điểm
             const scoreList = await Promise.all(
                 all.map(async (d) => {
 
@@ -49,17 +46,16 @@ class SymptomsController {
                 })
             );
 
-            // Lọc null + sort
             const filtered = scoreList
                 .filter(Boolean)
                 .sort((a, b) => b.score - a.score);
 
 
-            // luu lịch sử dự đoán
-if (req.user) {
+            // SAVE HISTORY
+            if (req.user) {
                 try {
                     await History.create({
-                        user: req.user._id,
+                        user: req.user.id,   // <-- đúng
                         type: "predict",
                         inputSymptoms: Array.isArray(symptoms) ? symptoms : [symptoms],
                         diseaseName: "unknown"
@@ -67,11 +63,8 @@ if (req.user) {
                 } catch (err) {
                     console.error("Lỗi lưu history predict:", err.message);
                 }
-            } else {
-                console.log("Guest dự đoán, không lưu history");
             }
 
-            // tra ve ket qua
             return res.json({
                 message: "Kết quả chuẩn đoán",
                 count: filtered.length,
@@ -82,19 +75,26 @@ if (req.user) {
             return res.status(500).json({ message: err.message });
         }
     }
+
     async getHistory(req, res) {
         try {
             if (!req.user) return res.status(401).json({ message: "Bạn chưa đăng nhập!" });
 
-            const history = await History.find({ user: req.user._id, type: "predict" })
-                .sort({ createdAt: -1 });
+            const history = await History.find({
+                user: req.user.id,   // <-- sửa ở đây
+                type: "predict"
+            }).sort({ createdAt: -1 });
 
-            return res.json({ message: "Lịch sử dự đoán", count: history.length, data: history });
+            return res.json({ 
+                message: "Lịch sử dự đoán", 
+                count: history.length, 
+                data: history 
+            });
+
         } catch (err) {
             return res.status(500).json({ message: err.message });
         }
     }
 }
-
 
 module.exports = new SymptomsController();
