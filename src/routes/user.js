@@ -8,6 +8,6 @@ const {verifyToken} = require('../middleware/auth');
 router.get('/getUser', verifyToken, userController.getUser);
 
 // update user
-router.put('/updateUser', verifyToken, userController.updateUser);
+router.patch('/updateUser', verifyToken, userController.updateUser);
 
 module.exports = router;
