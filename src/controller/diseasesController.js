@@ -44,7 +44,7 @@ class DiseasesController{
             if (req.user && formattedData.length > 0) {
                 try {
                     await History.create({
-                        user: req.user._id,
+                        user: req.user.userId,
                         type: "search",
                         diseaseName: formattedData[0].name || "unknown",
                         inputSymptoms: []
@@ -152,7 +152,7 @@ class DiseasesController{
         try {
             if (!req.user) return res.status(401).json({ message: "Bạn chưa đăng nhập!" });
 
-            const history = await History.find({ user: req.user._id, type: "search" })
+            const history = await History.find({ user: req.user.userId, type: "search" })
                 .sort({ createdAt: -1 });
 
             return res.json({ message: "Lịch sử tìm kiếm", count: history.length, data: history });
