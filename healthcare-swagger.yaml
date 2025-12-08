@@ -1,0 +1,471 @@
+openapi: 3.0.4
+info:
+  title: Health-Care 2025
+  description: |-
+    A website to help users understand their symptoms and receive initial health advice
+    Some useful links:
+  contact:
+    email: 23520256@gm.uit.edu.vn
+  version: 1.0.12
+servers:
+  - url: http://localhost:3001
+    description: Local development server
+
+  - url: https://health-diagnosis-backend.onrender.com
+    description: Production server
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+tags:
+  - name: auth
+    description: Authentication & User Account APIs (Signup, Login, OTP, Password Reset)
+  - name: user
+    description: Information about User(Update, add, delete private infomation)
+paths:
+  /api/auth/signup:
+    post:
+      tags:
+        - auth
+      summary: Sign up a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - First_name
+                - Last_name
+                - Username
+                - phone
+                - email
+                - password
+              properties:
+                First_name:
+                  type: string
+                  description: User's first name
+                Last_name:
+                  type: string
+                  description: User's last name
+                Username:
+                  type: string
+                  description: Unique username
+                phone:
+                  type: string
+                  description: User's phone number
+                email:
+                  type: string
+                  format: email
+                  description: User's email
+                password:
+                  type: string
+                  description: User's password
+      responses:
+        "200":
+          description: Sign up result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  message:
+                    type: string
+                  error:
+                    type: string
+                    nullable: true
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  message:
+                    type: string
+                  error:
+                    type: string
+  /api/auth/login:
+    post:
+      tags:
+        - auth
+      summary: Login with username and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - Username
+                - password
+              properties:
+                Username:
+                  type: string
+                  description: User's username
+                password:
+                  type: string
+                  description: User's password
+      responses:
+        "200":
+          description: Login result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    nullable: true
+                  message:
+                    type: string
+                    nullable: true
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  Error:
+                    type: string
+  /api/auth/logout:
+    post:
+      tags:
+        - auth
+      summary: Logout the user
+      responses:
+        "200":
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /api/auth/forgotpassword:
+    post:
+      tags:
+        - auth
+      summary: Request OTP to reset password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: User's email
+      responses:
+        "200":
+          description: OTP sent successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        "404":
+          description: Email not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /api/auth/verifyOtp:
+    post:
+      tags:
+        - auth
+      summary: Verify OTP sent to email
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - otp
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: User's email
+                otp:
+                  type: string
+                  description: OTP received by email
+      responses:
+        "200":
+          description: OTP verified successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        "400":
+          description: Invalid, expired, or non-existent OTP
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /api/auth/resetpassword:
+    post:
+      tags:
+        - auth
+      summary: Reset password using OTP
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - otp
+                - newPassword
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: User's email
+                otp:
+                  type: string
+                  description: OTP received by email
+                newPassword:
+                  type: string
+                  description: New password
+      responses:
+        "200":
+          description: Password reset successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        "400":
+          description: Invalid or expired OTP
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+  /api/user/getUser:
+    get:
+      tags:
+        - user
+      summary: Lấy thông tin user hiện tại
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Thông tin user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  _id:
+                    type: string
+                  First_name:
+                    type: string
+                  Last_name:
+                    type: string
+                  Username:
+                    type: string
+                  phone:
+                    type: string
+                  email:
+                    type: string
+        "401":
+          description: Token không hợp lệ hoặc không cung cấp
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        "404":
+          description: User không tồn tại
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        "500":
+          description: Lỗi server
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /api/user/updateUser:
+    patch:
+      tags:
+        - user
+      summary: Cập nhật thông tin user (bao gồm đổi mật khẩu)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                First_name:
+                  type: string
+                Last_name:
+                  type: string
+                Username:
+                  type: string
+                phone:
+                  type: string
+                email:
+                  type: string
+                oldPassword:
+                  type: string
+                newPassword:
+                  type: string
+                confirmPassword:
+                  type: string
+      responses:
+        "200":
+          description: Cập nhật thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  user:
+                    type: object
+                    properties:
+                      _id:
+                        type: string
+                      First_name:
+                        type: string
+                      Last_name:
+                        type: string
+                      Username:
+                        type: string
+                      phone:
+                        type: string
+                      email:
+                        type: string
+        "400":
+          description: Dữ liệu gửi lên không hợp lệ
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        "401":
+          description: Token không hợp lệ
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        "404":
+          description: User không tồn tại
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        "500":
+          description: Lỗi server
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string

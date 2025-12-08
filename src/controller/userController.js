@@ -3,7 +3,7 @@ const bcrypt = require('bcrypt'); // dung de hash lai mat khau
 
 exports.getUser = async(req, res)=>{
     try{
-        const userID = req.user.id;
+        const userID = req.user.userId;;
         const user = await User.findById(userID).select('-password');
         if(!user){
             return res.status(404).json({message: "User không tồn tại!"});
@@ -17,7 +17,7 @@ exports.getUser = async(req, res)=>{
 
 exports.updateUser = async(req, res) => {
     try{
-        const userId = req.user.id;
+        const userId = req.user.userId;
         const{
         First_name,
         Last_name,

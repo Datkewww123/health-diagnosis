@@ -6,22 +6,25 @@ const historySchema = new mongoose.Schema({
         ref: 'User',
         required: true
     },
+
     type: {
         type: String,
         enum: ['search', 'predict'],
         required: true
     },
 
+    // Tên bệnh được chọn
+    diseaseName: {
+        type: String,
+        required: true
+    },
+
+    // Triệu chứng gốc (chỉ dành cho predict)
     inputSymptoms: {
         type: [String],
         default: []
     },
 
-    result: {
-        type: Array,
-        default: []
-    }
-
-}, { timestamps: true }); 
+}, { timestamps: true });
 
 module.exports = mongoose.model('History', historySchema);
