@@ -12,7 +12,8 @@ const authRoutes = require('./routes/auth'); // import auth tu router
 const symptomRoutes = require('./routes/symptoms'); // import symptoms từ router
 const diseasesRoutes = require('./routes/disease'); // import diseases tu router
 const userRoutes = require('./routes/user') // lay thong tin, update user tu router
-const adminRoutes = require('./routes/admin')
+const adminRoutes = require('./routes/admin'); // cap nhat admin
+const sendEmail = require('./routes/sendMail');
 // ket nối db
 connectDB();
 
@@ -20,6 +21,7 @@ connectDB();
 //middleware
 app.use(cors()); // cho phep fe ket noi tu bat cu dau (domain khac)
 app.use(express.json());
+app.use(express.urlencoded({ extended: true })); 
 
 
 // dang ki route (duong dan api)
@@ -28,6 +30,7 @@ app.use('/api/symptoms', symptomRoutes); // duong dan den symptoms
 app.use('/api/diseases', diseasesRoutes); // duong dan den diseases
 app.use('/api/user', userRoutes) // duong dan den user
 app.use('/api/admin', adminRoutes) // duong dan den admin
+app.use('/api/mail', sendEmail) //
 
 
 // route trang chu

@@ -30,6 +30,8 @@ tags:
     description: Disease information APIs (Search diseases, Get disease details, Retrieve search history)
   - name: admin
     description: Admin management APIs (Create, Update, Delete, View diseases; Accessible only by admin)
+  - name: mail
+    description: Send Email to a company/school(optional) using OAuth2
 
 paths:
   /api/auth/signup:
@@ -1145,3 +1147,93 @@ paths:
           description: Không phải admin
         "500":
           description: Lỗi server
+  /api/mail/sendemail:
+    post:
+      tags:
+        - mail
+      summary: Send a leave email from user to recipient
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - recipientName
+                - recipientEmail
+                - disease
+              properties:
+                recipientName:
+                  type: string
+                  description: Name of the recipient (manager/supervisor)
+                recipientEmail:
+                  type: string
+                  format: email
+                  description: Email address of the recipient
+                disease:
+                  type: string
+                  description: Disease or reason for leave
+                days:
+                  type: integer
+                  description: Number of days to take leave
+                  default: 1
+                companyName:
+                  type: string
+                  description: Optional company name, will appear in the letter
+                  example: ABC Corp
+                position:
+                  type: string
+                  description: Optional position of the user, will appear in the letter
+                  example: Software Engineer
+      responses:
+        "200":
+          description: Email sent successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  leaveLetter:
+                    type: string
+                    description: Full content of the leave email
+        "400":
+          description: Missing required information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        "401":
+          description: User not authorized or token missing/invalid
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  error:
+                    type: string
