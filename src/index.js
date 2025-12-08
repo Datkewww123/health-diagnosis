@@ -19,9 +19,14 @@ connectDB();
 
 
 //middleware
-app.use(cors()); // cho phep fe ket noi tu bat cu dau (domain khac)
+app.use(cors({
+  origin: "*", // hoặc chỉ định domain frontend nếu có
+  methods: ["GET","POST","PUT","PATCH","DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+}));; // cho phep fe ket noi tu bat cu dau (domain khac)
 app.use(express.json());
 app.use(express.urlencoded({ extended: true })); 
+
 
 
 // dang ki route (duong dan api)
