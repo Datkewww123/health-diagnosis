@@ -24,6 +24,13 @@ tags:
     description: Authentication & User Account APIs (Signup, Login, OTP, Password Reset)
   - name: user
     description: Information about User(Update, add, delete private infomation)
+  - name: symptoms
+    description: Symptom-related APIs (Predict disease from symptoms, Retrieve prediction history)
+  - name: diseases
+    description: Disease information APIs (Search diseases, Get disease details, Retrieve search history)
+  - name: admin
+    description: Admin management APIs (Create, Update, Delete, View diseases; Accessible only by admin)
+
 paths:
   /api/auth/signup:
     post:
@@ -469,3 +476,672 @@ paths:
                 properties:
                   message:
                     type: string
+  /api/symptoms/check:
+    post:
+      tags:
+        - symptoms
+      summary: Dự đoán bệnh dựa trên triệu chứng
+      description: Nhận danh sách triệu chứng và trả về các bệnh phù hợp kèm điểm số.
+      security: []   # Không yêu cầu token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - symptoms
+              properties:
+                symptoms:
+                  type: array
+                  description: Danh sách triệu chứng người dùng nhập
+                  items:
+                    type: string
+      responses:
+        "200":
+          description: Kết quả dự đoán bệnh
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  count:
+                    type: number
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        score:
+                          type: number
+                        matched:
+                          type: array
+                          items:
+                            type: string
+        "400":
+          description: Thiếu triệu chứng đầu vào
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        "500":
+          description: Lỗi server
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+  /api/symptoms/history:
+    get:
+      tags:
+        - symptoms
+      summary: Lấy lịch sử dự đoán bệnh
+      description: Chỉ hiển thị lịch sử của user hiện tại (yêu cầu token)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Trả về danh sách lịch sử dự đoán
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  count:
+                    type: number
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        _id:
+                          type: string
+                        inputSymptoms:
+                          type: array
+                          items:
+                            type: string
+                        diseaseName:
+                          type: string
+                        createdAt:
+                          type: string
+        "401":
+          description: Không có token hoặc token sai
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        "500":
+          description: Lỗi server
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+  /api/diseases/search:
+    post:
+      tags:
+        - diseases
+      summary: Tìm bệnh theo tên
+      description: Tìm bệnh bằng tên tiếng Việt, trả về id và tên tiếng Việt. Nếu user đã đăng nhập, lưu lịch sử tìm kiếm.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: Tên bệnh muốn tìm
+      responses:
+        "200":
+          description: Kết quả tìm kiếm
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  count:
+                    type: number
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        _id:
+                          type: string
+                        name:
+                          type: string
+        "400":
+          description: Không có tên bệnh trong body
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  count:
+                    type: number
+                  data:
+                    type: array
+        "500":
+          description: Lỗi server
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /api/diseases/detail/{id}:
+    get:
+      tags:
+        - diseases
+      summary: Lấy chi tiết bệnh
+      description: Trả về thông tin chi tiết của bệnh, gồm triệu chứng, chẩn đoán, điều trị, bác sĩ, khoa, lời khuyên,...
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID của bệnh
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Thông tin chi tiết bệnh
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  _id:
+                    type: string
+                  name:
+                    type: string
+                  overview:
+                    type: string
+                  symptoms:
+                    type: array
+                    items:
+                      type: string
+                  causes:
+                    type: array
+                    items:
+                      type: string
+                  diagnosis:
+                    type: array
+                    items:
+                      type: string
+                  treatment:
+                    type: array
+                    items:
+                      type: string
+                  doctor:
+                    type: array
+                    items:
+                      type: string
+                  department:
+                    type: string
+                  Precaution_1:
+                    type: string
+                  Precaution_2:
+                    type: string
+                  Precaution_3:
+                    type: string
+                  Precaution_4:
+                    type: string
+                  image_url:
+                    type: string
+        "404":
+          description: Không tìm thấy bệnh
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        "500":
+          description: Lỗi server
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /api/diseases/search/history:
+    get:
+      tags:
+        - diseases
+      summary: Lấy lịch sử tìm kiếm
+      description: Chỉ hiển thị lịch sử tìm kiếm của user hiện tại. Yêu cầu đăng nhập.
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Trả về danh sách lịch sử tìm kiếm
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  count:
+                    type: number
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        _id:
+                          type: string
+                        diseaseName:
+                          type: string
+                        inputSymptoms:
+                          type: array
+                          items:
+                            type: string
+                        createdAt:
+                          type: string
+        "401":
+          description: Không có token hoặc token sai
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        "500":
+          description: Lỗi server
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+  /api/admin/all:
+    get:
+      tags:
+        - admin
+      summary: Lấy tất cả bệnh
+      description: Trả về danh sách toàn bộ bệnh. Chỉ admin mới truy cập được.
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Danh sách bệnh
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: number
+                  diseases:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        _id:
+                          type: string
+                        name:
+                          type: string
+                        overview:
+                          type: string
+                        image_url:
+                          type: string
+                        diagnosis:
+                          type: array
+                          items:
+                            type: string
+                        symptoms:
+                          type: array
+                          items:
+                            type: string
+                        causes:
+                          type: array
+                          items:
+                            type: string
+                        treatment:
+                          type: array
+                          items:
+                            type: string
+                        doctors:
+                          type: array
+                          items:
+                            type: string
+                        departments:
+                          type: array
+                          items:
+                            type: string
+                        Precaution_1:
+                          type: string
+                        Precaution_2:
+                          type: string
+                        Precaution_3:
+                          type: string
+                        Precaution_4:
+                          type: string
+        "401":
+          description: Không có token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        "403":
+          description: Không phải admin
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        "500":
+          description: Lỗi server
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /api/admin/disease/{id}:
+    get:
+      tags:
+        - admin
+      summary: Lấy bệnh theo ID
+      description: Trả về thông tin chi tiết bệnh. Chỉ admin mới truy cập được.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID bệnh
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Thông tin bệnh
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  disease:
+                    type: object
+                    properties:
+                      _id:
+                        type: string
+                      name:
+                        type: string
+                      overview:
+                        type: string
+                      image_url:
+                        type: string
+                      diagnosis:
+                        type: array
+                        items:
+                          type: string
+                      symptoms:
+                        type: array
+                        items:
+                          type: string
+                      causes:
+                        type: array
+                        items:
+                          type: string
+                      treatment:
+                        type: array
+                        items:
+                          type: string
+                      doctors:
+                        type: array
+                        items:
+                          type: string
+                      departments:
+                        type: array
+                        items:
+                          type: string
+                      Precaution_1:
+                        type: string
+                      Precaution_2:
+                        type: string
+                      Precaution_3:
+                        type: string
+                      Precaution_4:
+                        type: string
+        "401":
+          description: Không có token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        "403":
+          description: Không phải admin
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        "404":
+          description: Bệnh không tồn tại
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        "500":
+          description: Lỗi server
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+    put:
+      tags:
+        - admin
+      summary: Cập nhật bệnh
+      description: Cập nhật thông tin bệnh theo ID. Chỉ admin mới truy cập được.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID bệnh
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Các trường có thể cập nhật
+              properties:
+                name:
+                  type: string
+                overview:
+                  type: string
+                symptoms:
+                  type: string
+                causes:
+                  type: string
+                diagnosis:
+                  type: string
+                treatment:
+                  type: string
+                doctors:
+                  type: string
+                departments:
+                  type: string
+                image_url:
+                  type: string
+                Precaution_1:
+                  type: string
+                Precaution_2:
+                  type: string
+                Precaution_3:
+                  type: string
+                Precaution_4:
+                  type: string
+      responses:
+        "200":
+          description: Cập nhật thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  updated:
+                    type: object
+        "401":
+          description: Không có token
+        "403":
+          description: Không phải admin
+        "404":
+          description: Bệnh không tồn tại
+        "500":
+          description: Lỗi server
+
+    delete:
+      tags:
+        - admin
+      summary: Xóa bệnh
+      description: Xóa bệnh theo ID. Chỉ admin mới thực hiện được.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID bệnh
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Xóa thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        "401":
+          description: Không có token
+        "403":
+          description: Không phải admin
+        "404":
+          description: Bệnh không tồn tại
+        "500":
+          description: Lỗi server
+
+  /api/admin/disease:
+    post:
+      tags:
+        - admin
+      summary: Tạo bệnh mới
+      description: Thêm một bệnh mới vào hệ thống. Chỉ admin mới thực hiện được.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                overview:
+                  type: string
+                symptoms:
+                  type: string
+                causes:
+                  type: string
+                diagnosis:
+                  type: string
+                treatment:
+                  type: string
+                doctors:
+                  type: string
+                departments:
+                  type: string
+                image_url:
+                  type: string
+                Precaution_1:
+                  type: string
+                Precaution_2:
+                  type: string
+                Precaution_3:
+                  type: string
+                Precaution_4:
+                  type: string
+      responses:
+        "200":
+          description: Tạo bệnh thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  disease:
+                    type: object
+        "400":
+          description: Thiếu trường bắt buộc (name)
+        "401":
+          description: Không có token
+        "403":
+          description: Không phải admin
+        "500":
+          description: Lỗi server
