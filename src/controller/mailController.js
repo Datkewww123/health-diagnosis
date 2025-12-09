@@ -35,20 +35,16 @@ async function sendEmailFromUser(userEmail, recipientEmail, subject, text) {
 exports.sendLeaveEmail = async (req, res) => {
   try {
     const userId = req.user.userId;
-
-    // Lấy thông tin user từ DB
     const user = await User.findById(userId).lean();
     if (!user) {
       return res.status(404).json({ success: false, message: 'User không tồn tại' });
     }
 
     const { recipientName, recipientEmail, disease, days, company, position } = req.body;
-
     if (!recipientName || !recipientEmail || !disease) {
       return res.status(400).json({ success: false, message: 'Thiếu thông tin bắt buộc' });
     }
 
-    // Tạo template
     const leaveLetter = generateLeaveLetter(
       user,
       { name: recipientName, email: recipientEmail },
@@ -58,21 +54,30 @@ exports.sendLeaveEmail = async (req, res) => {
       position
     );
 
-    // Gửi email
-    await sendEmailFromUser(
+    // **Gửi email async mà không chặn FE**
+    sendEmailFromUser(
       user.email,
       recipientEmail,
       `Đơn xin nghỉ phép – ${user.First_name} ${user.Last_name}`,
       leaveLetter
-    );
+    ).then(() => {
+      console.log('Email gửi thành công');
+    }).catch(err => {
+      console.error('Lỗi khi gửi email async:', err);
+    });
 
-    return res.json({ success: true, message: 'Email đã gửi thành công', leaveLetter });
+    // FE nhận response ngay lập tức
+    return res.json({ 
+      success: true, 
+      message: 'Yêu cầu nghỉ phép đã được ghi nhận. Email sẽ được gửi trong giây lát.', 
+      leaveLetter 
+    });
 
   } catch (err) {
     console.error("Lỗi gửi email:", err);
     return res.status(500).json({
       success: false,
-      message: 'Có lỗi xảy ra khi gửi email',
+      message: 'Có lỗi xảy ra khi xử lý yêu cầu',
       error: err.message
     });
   }
