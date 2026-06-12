@@ -1,8 +1,9 @@
 const Diseases = require('../model/diseases');
+
 function parseField(field) {
     if (!field) return "";
-    if (Array.isArray(field)) return field.join(", "); // lưu dạng string dấu phẩy
-    if (typeof field === "string") return field; // giữ nguyên string
+    if (Array.isArray(field)) return field.join(", ");
+    if (typeof field === "string") return field;
     return "";
 }
 
@@ -10,27 +11,21 @@ function formatField(field) {
     if (!field) return [];
     return field.split(",").map(s => s.trim());
 }
-class adminController{
-    async createDiseases(req, res){
-        try{
-            const{name,
-                overview,
-                symptoms,
-                causes,
-                diagnosis,
-                treatment,
-                doctors,
-                departments,
-                image_url,
-                Precaution_1,
-                Precaution_2,
-                Precaution_3,
-                Precaution_4
-        } = req.body;
-        if(!name){
-            return res.status(400).json({message:"Tên bệnh là bắt buộc!"});
-        }
-                const disease = await Diseases.create({
+
+class adminController {
+    async createDiseases(req, res) {
+        try {
+            const {
+                name, overview, symptoms, causes, diagnosis, treatment,
+                doctors, departments, image_url,
+                Precaution_1, Precaution_2, Precaution_3, Precaution_4
+            } = req.body;
+
+            if (!name) {
+                return res.status(400).json({ message: "Tên bệnh là bắt buộc!" });
+            }
+
+            const disease = await Diseases.create({
                 name,
                 overview,
                 image_url,
@@ -46,15 +41,25 @@ class adminController{
                 Precaution_4: Precaution_4 || null
             });
 
-            res.json({ message: "Bệnh đã được tạo", disease });
+            res.status(201).json({ message: "Bệnh đã được tạo", disease });
         } catch (err) {
             res.status(500).json({ message: err.message });
         }
     }
-// lay ra benh
+
     async getAllDiseases(req, res) {
         try {
-            const diseases = await Diseases.find();
+            // [FIX] Thêm pagination: page và limit từ query params
+            // Trước đây: Diseases.find() trả về ALL records trong 1 response
+            const page = parseInt(req.query.page) || 1;
+            const limit = parseInt(req.query.limit) || 20;
+            const skip = (page - 1) * limit;
+
+            const [diseases, total] = await Promise.all([
+                Diseases.find().skip(skip).limit(limit).lean(),
+                Diseases.countDocuments()
+            ]);
+
             const formatted = diseases.map(d => ({
                 _id: d._id,
                 name: d.name,
@@ -72,17 +77,23 @@ class adminController{
                 Precaution_4: d.Precaution_4
             }));
 
-            res.json({ count: formatted.length, diseases: formatted });
+            // [FIX] Trả thêm total, page, totalPages để FE biết tổng số trang
+            res.json({
+                count: formatted.length,
+                total,
+                page,
+                totalPages: Math.ceil(total / limit),
+                diseases: formatted
+            });
         } catch (err) {
             res.status(500).json({ message: err.message });
         }
     }
-    // cap nhat thong tin benh
-    // ----- GET BY ID -----
+
     async getDiseaseById(req, res) {
         try {
             const diseaseId = req.params.id;
-            const d = await Diseases.findById(diseaseId);
+            const d = await Diseases.findById(diseaseId).lean();
             if (!d) return res.status(404).json({ message: "Bệnh không tồn tại!" });
 
             const formatted = {
@@ -107,6 +118,7 @@ class adminController{
             res.status(500).json({ message: err.message });
         }
     }
+
     async updateDisease(req, res) {
         try {
             const diseaseId = req.params.id;
@@ -124,7 +136,7 @@ class adminController{
             res.status(500).json({ message: err.message });
         }
     }
-    // ----- DELETE -----
+
     async deleteDisease(req, res) {
         try {
             const diseaseId = req.params.id;
