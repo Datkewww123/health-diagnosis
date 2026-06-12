@@ -1,8 +1,6 @@
-// src/controller/mailController.js
 const User = require('../model/user');
-const createTransporter = require('../config/mail'); // mail.js sử dụng OAuth2
+const createTransporter = require('../config/mail');
 
-// Tạo template đơn nghỉ phép
 function generateLeaveLetter(user, recipient, disease, days, company, position) {
   return `
 Kính gửi ${recipient.name},
@@ -20,7 +18,6 @@ Email: ${user.email}
   `;
 }
 
-// Hàm gửi email từ Gmail user với OAuth2
 async function sendEmailFromUser(userEmail, recipientEmail, subject, text) {
   const transporter = await createTransporter();
   return transporter.sendMail({
@@ -31,18 +28,17 @@ async function sendEmailFromUser(userEmail, recipientEmail, subject, text) {
   });
 }
 
-// Controller chính
 exports.sendLeaveEmail = async (req, res) => {
   try {
     const userId = req.user.userId;
     const user = await User.findById(userId).lean();
     if (!user) {
-      return res.status(404).json({ success: false, message: 'User không tồn tại' });
+      return res.status(404).json({ message: 'Người dùng không tồn tại' });
     }
 
     const { recipientName, recipientEmail, disease, days, company, position } = req.body;
     if (!recipientName || !recipientEmail || !disease) {
-      return res.status(400).json({ success: false, message: 'Thiếu thông tin bắt buộc' });
+      return res.status(400).json({ message: 'Thiếu thông tin bắt buộc (recipientName, recipientEmail, disease)' });
     }
 
     const leaveLetter = generateLeaveLetter(
@@ -54,31 +50,28 @@ exports.sendLeaveEmail = async (req, res) => {
       position
     );
 
-    // **Gửi email async mà không chặn FE**
-    sendEmailFromUser(
+    // [FIX] await email TRƯỚC khi response - không còn fire-and-forget
+    // Trước đây: sendEmailFromUser(...).then(() => {...}).catch(() => {...}) và trả response ngay
+    // Lỗi bị nuốt, user luôn thấy success dù email không gửi được
+    await sendEmailFromUser(
       user.email,
       recipientEmail,
       `Đơn xin nghỉ phép – ${user.First_name} ${user.Last_name}`,
       leaveLetter
-    ).then(() => {
-      console.log('Email gửi thành công');
-    }).catch(err => {
-      console.error('Lỗi khi gửi email async:', err);
-    });
+    );
 
-    // FE nhận response ngay lập tức
-    return res.json({ 
-      success: true, 
-      message: 'Yêu cầu nghỉ phép đã được ghi nhận. Email sẽ được gửi trong giây lát.', 
-      leaveLetter 
+    console.log('Email gửi thành công tới', recipientEmail);
+
+    return res.json({
+      message: 'Email đã được gửi thành công!',
+      leaveLetter
     });
 
   } catch (err) {
     console.error("Lỗi gửi email:", err);
+    // [FIX] Không leak err.message ra client
     return res.status(500).json({
-      success: false,
-      message: 'Có lỗi xảy ra khi xử lý yêu cầu',
-      error: err.message
+      message: 'Có lỗi xảy ra khi gửi email. Vui lòng thử lại sau!'
     });
   }
 };
