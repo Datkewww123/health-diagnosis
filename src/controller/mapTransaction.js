@@ -598,7 +598,41 @@ const VI_DESCRIPTION_MAP = {
     
     "underactive thyroid leading to low metabolism.": "Tuyến giáp hoạt động kém dẫn đến chuyển hóa thấp.",
     
-    "bacterial skin infection with red sores.": "Nhiễm trùng da do vi khuẩn gây lở loét đỏ."
+    "bacterial skin infection with red sores.": "Nhiễm trùng da do vi khuẩn gây lở loét đỏ.",
+
+    "chronic acid reflux into esophagus.": "Trào ngược axit mãn tính vào thực quản.",
+    "yellowing of skin due to bilirubin buildup.": "Vàng da do tích tụ bilirubin.",
+    "stomach/duodenal ulcers from acid or h. pylori.": "Loét dạ dày/tá tràng do axit hoặc vi khuẩn H. pylori.",
+    "inflammation of joints causing pain and reduced mobility.": "Viêm các khớp gây đau và giảm khả năng vận động.",
+    "infection/inflammation of stomach & intestines.": "Nhiễm trùng/viêm dạ dày và ruột.",
+    "self-limiting viral hepatitis usually via contaminated water.": "Viêm gan virus tự giới hạn thường qua nước nhiễm bẩn.",
+    "age-related degeneration of cervical spine structures.": "Thoái hóa các cấu trúc cột sống cổ do lão hóa.",
+    "immune or toxic response to medications.": "Phản ứng miễn dịch hoặc độc tính đối với thuốc.",
+    "dangerously low blood sugar.": "Lượng đường trong máu thấp nguy hiểm.",
+    "recurrent headache disorder involving neurological mechanisms.": "Rối loạn đau đầu tái phát liên quan đến cơ chế thần kinh.",
+    "acute viral infection of the liver transmitted via contaminated food/water.": "Nhiễm virus cấp tính ở gan lây qua thực phẩm/nước ô nhiễm.",
+    "loss of muscle control due to bleeding inside the brain.": "Mất kiểm soát cơ do chảy máu bên trong não.",
+    "lung infection filling alveoli with fluid.": "Nhiễm trùng phổi làm đầy dịch trong phế nang.",
+    "chronic viral liver infection progressing to cirrhosis.": "Nhiễm virus gan mãn tính tiến triển thành xơ gan.",
+    "chronic autoimmune skin disease causing rapid skin turnover.": "Bệnh da tự miễn mãn tính gây thay da nhanh chóng.",
+    "mosquito-borne viral fever that may progress to hemorrhagic shock.": "Sốt do virus truyền qua muỗi, có thể tiến triển thành sốc xuất huyết.",
+    "overactive thyroid gland producing excess hormones.": "Tuyến giáp hoạt động quá mức sản xuất dư thừa hormone.",
+    "enlarged swollen veins in rectum/anus causing discomfort.": "Tĩnh mạch sưng to ở trực tràng/hậu môn gây khó chịu.",
+    "parasitic infection transmitted by anopheles mosquitoes.": "Nhiễm ký sinh trùng do muỗi Anopheles truyền.",
+    "infection of bladder or urinary system.": "Nhiễm trùng bàng quang hoặc hệ tiết niệu.",
+    "blocked coronary artery causing myocardial death.": "Tắc nghẽn động mạch vành gây chết cơ tim.",
+    "viral co-infection requiring presence of hbv.": "Đồng nhiễm virus cần có sự hiện diện của HBV.",
+    "systemic bacterial infection from salmonella typhi.": "Nhiễm vi khuẩn toàn thân do Salmonella typhi.",
+    "contagious bacterial skin infection.": "Nhiễm trùng da do vi khuẩn dễ lây lan.",
+    "reduced bile flow from liver leading to buildup of bile acids.": "Giảm dòng chảy của mật từ gan dẫn đến tích tụ axit mật.",
+    "infection caused by dermatophytes, candida, or yeasts.": "Nhiễm trùng do nấm da, nấm candida hoặc nấm men.",
+    "enlarged, twisted superficial veins, usually in legs.": "Tĩnh mạch nông giãn to, xoắn lại, thường ở chân.",
+    "degeneration of joint cartilage causing chronic pain.": "Thoái hóa sụn khớp gây đau mãn tính.",
+    "chronic bacterial infection causing lung damage.": "Nhiễm vi khuẩn mãn tính gây tổn thương phổi.",
+    "chronic metabolic disorder with elevated blood glucose levels.": "Rối loạn chuyển hóa mãn tính với nồng độ đường trong máu cao.",
+    "viral upper respiratory tract infection.": "Nhiễm virus đường hô hấp trên.",
+    "chronic airway inflammation causing reversible airflow obstruction.": "Viêm đường hô hấp mãn tính gây tắc nghẽn luồng khí có hồi phục.",
+    "acute viral infection of the liver transmitted via contaminated food/water.": "Nhiễm virus cấp tính ở gan lây qua thực phẩm/nước ô nhiễm."
 };
 
 const VI_RISK_FACTOR_MAP = {
@@ -685,16 +719,104 @@ function translateDiseaseName(name) {
     return EN_TO_VI_DISEASES[name] || name;
 }
 
+// Từ đồng nghĩa y học tiếng Việt viết tắt/phổ biến -> Tên tiếng Anh chuẩn trong DB
+// Từ đồng nghĩa y học tiếng Việt viết tắt/phổ biến -> Tên tiếng Anh chuẩn trong DB
+const SEARCH_SYNONYMS = {
+    "tiểu đường": "Diabetes",
+    "đái tháo đường": "Diabetes",
+    "cao huyết áp": "Hypertension",
+    "huyết áp cao": "Hypertension",
+    "tăng huyết áp": "Hypertension",
+    "trào ngược dạ dày": "GERD",
+    "trào ngược": "GERD",
+    "sốt xuất huyết": "Dengue",
+    "cúm": "Common Cold", 
+    "cảm cúm": "Common Cold",
+    "cảm lạnh": "Common Cold",
+    "trĩ": "Dimorphic hemorrhoids (piles)",
+    "bệnh trĩ": "Dimorphic hemorrhoids (piles)",
+    "trĩ nội": "Dimorphic hemorrhoids (piles)",
+    "trĩ ngoại": "Dimorphic hemorrhoids (piles)",
+    "bệnh trĩ nội": "Dimorphic hemorrhoids (piles)",
+    "bệnh trĩ ngoại": "Dimorphic hemorrhoids (piles)",
+    "đau nửa đầu": "Migraine",
+    "đau đầu": "Migraine",
+    "vàng da": "Jaundice",
+    "thủy đậu": "Chicken pox",
+    "viêm phổi": "Pneumonia",
+    "lao": "Tuberculosis",
+    "bệnh lao": "Tuberculosis",
+    "suy giãn tĩnh mạch": "Varicose veins",
+    "giãn tĩnh mạch": "Varicose veins",
+    "nhiễm trùng tiết niệu": "Urinary tract infection",
+    "nhiễm trùng đường tiết niệu": "Urinary tract infection",
+    "viêm khớp": "Arthritis",
+    "hen suyễn": "Bronchial Asthma",
+    "hen phế quản": "Bronchial Asthma",
+    "mụn": "Acne",
+    "mụn trứng cá": "Acne",
+    "dị ứng": "Allergy",
+    "chốc lở": "Impetigo",
+    "chóng mặt": "Paroxysmal Positional Vertigo",
+    "chóng mặt kịch phát": "Paroxysmal Positional Vertigo",
+    "bppv": "Paroxysmal Positional Vertigo",
+    "loét dạ dày": "Peptic ulcer disease",
+    "viêm loét dạ dày": "Peptic ulcer disease",
+    "aids": "AIDS",
+    "suy giảm miễn dịch": "AIDS",
+    "nhồi máu cơ tim": "Heart attack",
+    "đau tim": "Heart attack",
+    "liệt": "Paralysis (brain hemorrhage)",
+    "xuất huyết não": "Paralysis (brain hemorrhage)"
+};
+
+function removeVietnameseTones(str) {
+    if (!str) return "";
+    return str.normalize("NFD")
+              .replace(/[\u0300-\u036f]/g, "")
+              .replace(/đ/g, "d")
+              .replace(/Đ/g, "d");
+}
+
 // VI -> EN (Tên bệnh để search)
 function translateDiseaseVItoEN(nameVI) {
+    if (!nameVI) return "";
     let str = nameVI.toLowerCase().trim();
-    for (const key in VI_TO_EN_DISEASES) {
-        if (str.includes(key)) {
+    let strNoTone = removeVietnameseTones(str);
+    
+    // 1. Kiểm tra trong bảng SEARCH_SYNONYMS trước (cả có dấu và không dấu)
+    if (SEARCH_SYNONYMS[str]) {
+        return SEARCH_SYNONYMS[str];
+    }
+    
+    // Kiểm tra không dấu trong SEARCH_SYNONYMS
+    for (const synKey in SEARCH_SYNONYMS) {
+        if (removeVietnameseTones(synKey) === strNoTone) {
+            return SEARCH_SYNONYMS[synKey];
+        }
+    }
+    
+    // 2. Kiểm tra khớp chính xác hoàn toàn trong từ điển chính VI_TO_EN_DISEASES
+    if (VI_TO_EN_DISEASES[str]) {
+        return VI_TO_EN_DISEASES[str];
+    }
+    
+    // 3. Tìm kiếm thông minh hơn (khớp ranh giới từ nguyên vẹn - Whole Word Match)
+    const keys = Object.keys(VI_TO_EN_DISEASES).sort((a, b) => b.length - a.length);
+    const regexWholeWord = new RegExp('\\b' + strNoTone + '\\b', 'i');
+    
+    for (const key of keys) {
+        const keyNoTone = removeVietnameseTones(key);
+        // Thay thế ký tự không phải chữ/số thành khoảng trắng để regex \b bắt chính xác nguyên từ
+        const cleanKeyNoTone = keyNoTone.replace(/[^a-z0-9]/g, ' ').replace(/\s+/g, ' ').trim();
+        
+        if (regexWholeWord.test(cleanKeyNoTone)) {
             return VI_TO_EN_DISEASES[key];
         }
     }
     return nameVI;
 }
+
 
 // Dich diagonisis tu En sang Vi
 function translateDiagnosis(en) {
