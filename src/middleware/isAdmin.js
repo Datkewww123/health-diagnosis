@@ -1,7 +1,15 @@
-const jwt = require('jsonwebtoken'); // lay token sau khi dang nhap 
+const jwt = require('jsonwebtoken');
 
+// [FIX] Dùng process.env.JWT_SECRET thay vì "SECRET_KEY" hardcode (bug critical)
+// [FIX] Throw error nếu JWT_SECRET chưa được cấu hình
+const getJwtSecret = () => {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error('JWT_SECRET environment variable is not set');
+  }
+  return secret;
+};
 
-// Kiểm tra token và role = admin
 const isAdmin = (req, res, next) => {
     const authHeader = req.headers.authorization;
     if (!authHeader) {
@@ -10,14 +18,16 @@ const isAdmin = (req, res, next) => {
 
     const token = authHeader.split(" ")[1];
     try {
-        const decoded = jwt.verify(token, "SECRET_KEY");
+        const decoded = jwt.verify(token, getJwtSecret());
         if (decoded.role !== "admin") {
             return res.status(403).json({ message: "Access denied. Admins only." });
         }
-        req.user = decoded;
+        // [FIX] Set req.user đồng bộ với auth.js (userId + role) thay vì gán cả decoded object
+        req.user = { userId: decoded.id || decoded._id || decoded.userId, role: decoded.role };
         next();
     } catch (err) {
         return res.status(401).json({ message: "Invalid token" });
     }
 };
-module.exports = {isAdmin}
+
+module.exports = { isAdmin }

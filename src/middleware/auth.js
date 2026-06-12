@@ -1,22 +1,31 @@
-// kiem tra xem la admin hay user
-const jwt = require('jsonwebtoken'); //tao token sau khi login
-//middle ware de kiem tra token xem user da login chua
+const jwt = require('jsonwebtoken');
+
+// [FIX] Không còn fallback "SECRET_KEY" - yêu cầu JWT_SECRET phải được set trong env
+// [FIX] Throw error rõ ràng nếu thiếu JWT_SECRET thay vì dùng secret mặc định
+const getJwtSecret = () => {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error('JWT_SECRET environment variable is not set');
+  }
+  return secret;
+};
+
 const verifyToken = (req, res, next) => {
-    const authHeader = req.headers.authorization; //
-    if(!authHeader){ // khong co header tra ve 401
-        return res.status(401).json({message:"No token provided!"});
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+        return res.status(401).json({ message: "No token provided!" });
     }
-    const token = authHeader.split(" ")[1]; // lay phan sau cua bearer de kiem tra token
-    try{
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || "SECRET_KEY"); // kiem tra token co hop le khong voi serect key
-        req.user = { userId: decoded.id || decoded._id || decoded.userId };// neu hop le thi giai ma payload gan vao req.user
-        next(); //chuyen sang middle ware tiep theo hoac route handler
-    }
-    catch(err){ // neu token khong hop le
-        return res.status(401).json({message:"Invalid token"});
+    const token = authHeader.split(" ")[1];
+    try {
+        const decoded = jwt.verify(token, getJwtSecret());
+        // [FIX] Thêm role vào req.user để xử lý admin nhất quán
+        req.user = { userId: decoded.id || decoded._id || decoded.userId, role: decoded.role };
+        next();
+    } catch (err) {
+        return res.status(401).json({ message: "Invalid token" });
     }
 };
-// optional login de luu lich su
+
 const optionalAuth = (req, res, next) => {
     const authHeader = req.headers.authorization;
     if (!authHeader) {
@@ -26,11 +35,13 @@ const optionalAuth = (req, res, next) => {
 
     const token = authHeader.split(' ')[1];
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || "SECRET_KEY");
-        req.user = { userId: decoded.id || decoded._id || decoded.userId };
+        const decoded = jwt.verify(token, getJwtSecret());
+        // [FIX] Thêm role vào req.user cho đồng nhất với verifyToken
+        req.user = { userId: decoded.id || decoded._id || decoded.userId, role: decoded.role };
     } catch (err) {
         req.user = null;
     }
     next();
 };
-module.exports = {verifyToken, optionalAuth};
+
+module.exports = { verifyToken, optionalAuth };
