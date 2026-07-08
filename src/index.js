@@ -1,7 +1,7 @@
 const path = require('path');
 const express = require('express');
 require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
-const connectDB = require('./config/database');
+const { connectDB } = require('./config/database');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
@@ -14,12 +14,23 @@ const symptomRoutes = require('./routes/symptoms');
 const diseasesRoutes = require('./routes/disease');
 const userRoutes = require('./routes/user');
 const adminRoutes = require('./routes/admin');
-const sendEmail = require('./routes/sendMail');
+const appointmentRoutes = require('./routes/appointment');
+const icdRoutes = require('./routes/icd');
+const newsRoutes = require('./routes/news');
+const { startCronJobs } = require('./config/cron');
 
-connectDB();
+connectDB().then(() => {
+  startCronJobs();
+  // Fetch news ngay khi server start để luôn có bài mới nhất
+  const { fetchAndSaveNews } = require('./config/newsService');
+  fetchAndSaveNews().catch(err => console.warn('[News] Startup fetch error:', err.message));
+});
+
 
 // [FIX] Thêm helmet - security headers (chống XSS, clickjacking, MIME sniffing, ...)
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: false,
+}));
 
 // [FIX] CORS origin từ env, support multiple origins (comma-separated)
 // Không còn origin: "*" cho phép mọi domain
@@ -40,10 +51,10 @@ const authLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-// Các API khác: 100 request / 15 phút
+// Các API khác: 1000 request / 15 phút (tránh lỗi 429 khi phát triển)
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
+  max: 1000,
   message: { message: "Quá nhiều yêu cầu, vui lòng thử lại sau 15 phút" },
   standardHeaders: true,
   legacyHeaders: false,
@@ -57,7 +68,10 @@ app.use('/api/symptoms', apiLimiter, symptomRoutes);
 app.use('/api/diseases', apiLimiter, diseasesRoutes);
 app.use('/api/user', apiLimiter, userRoutes);
 app.use('/api/admin', apiLimiter, adminRoutes);
-app.use('/api/mail', apiLimiter, sendEmail);
+app.use('/api/appointments', apiLimiter, appointmentRoutes);
+app.use('/api/icd', apiLimiter, icdRoutes);
+app.use('/api/news', apiLimiter, newsRoutes);
+app.get('/api/dashboard/daily', apiLimiter, require('./controller/dashboardController').getDailyData);
 
 app.get('/', (req, res) => res.send('Home Page'));
 
