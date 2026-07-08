@@ -1,40 +1,34 @@
-const mongoose = require('mongoose');
+const { Sequelize } = require('sequelize');
 
-// [FIX] Thêm retry logic: thử kết nối lại 3 lần trước khi bỏ cuộc
-// [FIX] Không còn process.exit(1) - server không crash khi mất DB
-// [FIX] Tự động reconnect khi mất kết nối (mongoose handle sẵn)
-// [FIX] Timeout cấu hình rõ ràng: serverSelectionTimeoutMS: 5s, socketTimeoutMS: 45s
-
-const MAX_RETRIES = 3;
-const RETRY_DELAY_MS = 3000;
-
-async function connectWithRetry(attempt = 1) {
-  try {
-    await mongoose.connect(process.env.MONGO_URI, {
-      serverSelectionTimeoutMS: 5000,
-      socketTimeoutMS: 45000,
-    });
-    console.log('MongoDB Atlas Connected Successfully!');
-  } catch (err) {
-    console.error(`MongoDB connection attempt ${attempt}/${MAX_RETRIES} failed:`, err.message);
-    if (attempt < MAX_RETRIES) {
-      await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS));
-      return connectWithRetry(attempt + 1);
+const sequelize = new Sequelize(
+  process.env.DB_NAME || 'health_diagnosis_db',
+  process.env.DB_USER || 'root',
+  process.env.DB_PASSWORD || '',
+  {
+    host: process.env.DB_HOST || '127.0.0.1',
+    port: process.env.DB_PORT || 3306,
+    dialect: 'mysql',
+    logging: false, // Tắt log query SQL để tránh rối terminal
+    timezone: '+07:00', // Khớp múi giờ Việt Nam
+    define: {
+      timestamps: true,
+      underscored: true, // dùng snake_case (created_at, updated_at) trong MySQL
     }
-    console.error('All MongoDB connection attempts failed. Starting server without DB...');
   }
-}
+);
 
 const connectDB = async () => {
-  await connectWithRetry();
+  try {
+    await sequelize.authenticate();
+    console.log('MySQL Connected Successfully via Sequelize!');
+    // Tự động đồng bộ cấu hình DB (chỉ tạo nếu chưa tồn tại)
+    await sequelize.sync();
+    console.log('All MySQL Tables Synced Successfully!');
+  } catch (err) {
+    console.error('MySQL connection failed:', err.message);
+    console.error('Hãy chắc chắn rằng bạn đã khởi động MySQL trên XAMPP!');
+    process.exit(1);
+  }
 };
 
-mongoose.connection.on('disconnected', () => {
-  console.warn('MongoDB disconnected. Attempting to reconnect...');
-});
-
-mongoose.connection.on('error', (err) => {
-  console.error('MongoDB connection error:', err.message);
-});
-
-module.exports = connectDB;
+module.exports = { sequelize, connectDB };
