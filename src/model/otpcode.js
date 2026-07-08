@@ -1,9 +1,37 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const { sequelize } = require('../config/database');
+const User = require('./user');
 
-const otpSchema = new mongoose.Schema({
-  userId: { type: mongoose.Schema.Types.ObjectId, required: true, ref: 'user' },
-  otp: { type: String, required: true },
-  expiresAt: { type: Date, required: true }
+const OtpCode = sequelize.define('OtpCode', {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true,
+  },
+  user_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: {
+      model: User,
+      key: 'id'
+    },
+    onDelete: 'CASCADE'
+  },
+  otp: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  expires_at: {
+    type: DataTypes.DATE,
+    allowNull: false,
+  }
+}, {
+  tableName: 'otpcodes',
+  timestamps: false // OtpCode không cần created_at / updated_at
 });
 
-module.exports = mongoose.model('OtpCode', otpSchema);
+// Quan hệ
+User.hasMany(OtpCode, { foreignKey: 'user_id', onDelete: 'CASCADE' });
+OtpCode.belongsTo(User, { foreignKey: 'user_id' });
+
+module.exports = OtpCode;
