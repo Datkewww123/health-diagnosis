@@ -1,18 +1,13 @@
 openapi: 3.0.4
 info:
-  title: Health-Care 2025
-  description: |-
-    A website to help users understand their symptoms and receive initial health advice
-    Some useful links:
-  contact:
-    email: 23520256@gm.uit.edu.vn
-  version: 1.0.12
+  title: Healthcare System API Specification
+  description: API Documentation for Healthcare Disease Diagnosis & Appointment Booking System
+  version: 1.0.0
 servers:
-  - url: http://localhost:3001
-    description: Local development server
-
   - url: https://health-diagnosis-0nx2.onrender.com
-    description: Production server
+    description: Production Server on Render
+  - url: http://localhost:3001
+    description: Local Development Server
 components:
   securitySchemes:
     bearerAuth:
@@ -21,377 +16,161 @@ components:
       bearerFormat: JWT
 tags:
   - name: auth
-    description: Authentication & User Account APIs (Signup, Login, OTP, Password Reset)
+    description: Authentication & Password Recovery
   - name: user
-    description: Information about User(Update, add, delete private infomation)
+    description: User Profile Management
   - name: symptoms
-    description: Symptom-related APIs (Predict disease from symptoms, Retrieve prediction history)
+    description: Symptom Checking & AI Disease Prediction
   - name: diseases
-    description: Disease information APIs (Search diseases, Get disease details, Retrieve search history)
+    description: Disease Knowledge Base & Search History
+  - name: appointment
+    description: Booking & Patient Treatments
   - name: admin
-    description: Admin management APIs (Create, Update, Delete, View diseases; Accessible only by admin)
-  - name: mail
-    description: Send Email to a company/school(optional) using OAuth2
+    description: Administrative Controls (Hospitals, Doctors, Medicines)
+  - name: icd
+    description: ICD-10 Medical Coding APIs
+  - name: medicine
+    description: Medicine Inventory & Search
+  - name: news
+    description: Medical News Feed
+  - name: dashboard
+    description: Epidemiological Statistics Dashboard
 
 paths:
+  # === AUTHENTICATION ===
   /api/auth/signup:
     post:
-      tags:
-        - auth
-      summary: Sign up a new user
+      tags: [auth]
+      summary: Sign up a new account
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required:
-                - First_name
-                - Last_name
-                - Username
-                - phone
-                - email
-                - password
+              required: [email, password, Username, First_name, Last_name]
               properties:
-                First_name:
-                  type: string
-                  description: User's first name
-                Last_name:
-                  type: string
-                  description: User's last name
-                Username:
-                  type: string
-                  description: Unique username
-                phone:
-                  type: string
-                  description: User's phone number
-                email:
-                  type: string
-                  format: email
-                  description: User's email
-                password:
-                  type: string
-                  description: User's password
+                email: { type: string, format: email }
+                password: { type: string }
+                Username: { type: string }
+                First_name: { type: string }
+                Last_name: { type: string }
       responses:
-        "200":
-          description: Sign up result
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  ok:
-                    type: boolean
-                  message:
-                    type: string
-                  error:
-                    type: string
-                    nullable: true
-        "500":
-          description: Server error
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  ok:
-                    type: boolean
-                  message:
-                    type: string
-                  error:
-                    type: string
+        '200':
+          description: Registered successfully
+
   /api/auth/login:
     post:
-      tags:
-        - auth
-      summary: Login with username and password
+      tags: [auth]
+      summary: Log in with username/email and password
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required:
-                - Username
-                - password
+              required: [Username, password]
               properties:
-                Username:
-                  type: string
-                  description: User's username
-                password:
-                  type: string
-                  description: User's password
+                Username: { type: string }
+                password: { type: string }
       responses:
-        "200":
-          description: Login result
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  token:
-                    type: string
-                    nullable: true
-                  message:
-                    type: string
-                    nullable: true
-        "500":
-          description: Server error
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                  Error:
-                    type: string
+        '200':
+          description: Return JWT token
+
+  /api/auth/google-login:
+    post:
+      tags: [auth]
+      summary: Login via Google OAuth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token]
+              properties:
+                token: { type: string }
+      responses:
+        '200':
+          description: Return JWT token
+
   /api/auth/logout:
     post:
-      tags:
-        - auth
-      summary: Logout the user
+      tags: [auth]
+      summary: Log out current user
       responses:
-        "200":
-          description: Logout successful
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
+        '200':
+          description: Logged out successfully
 
   /api/auth/forgotpassword:
     post:
-      tags:
-        - auth
-      summary: Request OTP to reset password
+      tags: [auth]
+      summary: Request password reset OTP
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required:
-                - email
+              required: [email]
               properties:
-                email:
-                  type: string
-                  format: email
-                  description: User's email
+                email: { type: string, format: email }
       responses:
-        "200":
-          description: OTP sent successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-        "404":
-          description: Email not found
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-        "500":
-          description: Server error
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
+        '200':
+          description: OTP sent to email
 
   /api/auth/verifyOtp:
     post:
-      tags:
-        - auth
-      summary: Verify OTP sent to email
+      tags: [auth]
+      summary: Verify password reset OTP
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required:
-                - email
-                - otp
+              required: [email, otp]
               properties:
-                email:
-                  type: string
-                  format: email
-                  description: User's email
-                otp:
-                  type: string
-                  description: OTP received by email
+                email: { type: string, format: email }
+                otp: { type: string }
       responses:
-        "200":
+        '200':
           description: OTP verified successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-        "400":
-          description: Invalid, expired, or non-existent OTP
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-        "404":
-          description: User not found
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-        "500":
-          description: Server error
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
 
   /api/auth/resetpassword:
     post:
-      tags:
-        - auth
-      summary: Reset password using OTP
+      tags: [auth]
+      summary: Set a new password after OTP verification
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required:
-                - email
-                - otp
-                - newPassword
+              required: [email, otp, newPassword]
               properties:
-                email:
-                  type: string
-                  format: email
-                  description: User's email
-                otp:
-                  type: string
-                  description: OTP received by email
-                newPassword:
-                  type: string
-                  description: New password
+                email: { type: string, format: email }
+                otp: { type: string }
+                newPassword: { type: string }
       responses:
-        "200":
+        '200':
           description: Password reset successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-        "400":
-          description: Invalid or expired OTP
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-        "404":
-          description: User not found
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-        "500":
-          description: Server error
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
+
+  # === USER PROFILE ===
   /api/user/getUser:
     get:
-      tags:
-        - user
-      summary: Lấy thông tin user hiện tại
+      tags: [user]
+      summary: Retrieve current logged-in user profile
       security:
         - bearerAuth: []
       responses:
-        "200":
-          description: Thông tin user
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  _id:
-                    type: string
-                  First_name:
-                    type: string
-                  Last_name:
-                    type: string
-                  Username:
-                    type: string
-                  phone:
-                    type: string
-                  email:
-                    type: string
-        "401":
-          description: Token không hợp lệ hoặc không cung cấp
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-        "404":
-          description: User không tồn tại
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-        "500":
-          description: Lỗi server
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
+        '200':
+          description: Profile data returned
 
   /api/user/updateUser:
     patch:
-      tags:
-        - user
-      summary: Cập nhật thông tin user (bao gồm đổi mật khẩu)
+      tags: [user]
+      summary: Update user profile information
       security:
         - bearerAuth: []
       requestBody:
@@ -401,206 +180,53 @@ paths:
             schema:
               type: object
               properties:
-                First_name:
-                  type: string
-                Last_name:
-                  type: string
-                Username:
-                  type: string
-                phone:
-                  type: string
-                email:
-                  type: string
-                oldPassword:
-                  type: string
-                newPassword:
-                  type: string
-                confirmPassword:
-                  type: string
+                First_name: { type: string }
+                Last_name: { type: string }
+                phone: { type: string }
       responses:
-        "200":
-          description: Cập nhật thành công
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                  user:
-                    type: object
-                    properties:
-                      _id:
-                        type: string
-                      First_name:
-                        type: string
-                      Last_name:
-                        type: string
-                      Username:
-                        type: string
-                      phone:
-                        type: string
-                      email:
-                        type: string
-        "400":
-          description: Dữ liệu gửi lên không hợp lệ
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-        "401":
-          description: Token không hợp lệ
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-        "404":
-          description: User không tồn tại
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-        "500":
-          description: Lỗi server
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
+        '200':
+          description: Profile updated successfully
+
+  # === SYMPTOMS & AI PREDICTION ===
+  /api/symptoms:
+    get:
+      tags: [symptoms]
+      summary: Get all symptoms in database
+      responses:
+        '200':
+          description: List of symptoms returned
+
   /api/symptoms/check:
     post:
-      tags:
-        - symptoms
-      summary: Dự đoán bệnh dựa trên triệu chứng
-      description: Nhận danh sách triệu chứng và trả về các bệnh phù hợp kèm điểm số.
-      security: []   # Không yêu cầu token
+      tags: [symptoms]
+      summary: Predict diseases based on selected symptoms
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required:
-                - symptoms
+              required: [symptoms]
               properties:
                 symptoms:
                   type: array
-                  description: Danh sách triệu chứng người dùng nhập
-                  items:
-                    type: string
+                  items: { type: string }
       responses:
-        "200":
-          description: Kết quả dự đoán bệnh
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                  count:
-                    type: number
-                  data:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        name:
-                          type: string
-                        score:
-                          type: number
-                        matched:
-                          type: array
-                          items:
-                            type: string
-        "400":
-          description: Thiếu triệu chứng đầu vào
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-        "500":
-          description: Lỗi server
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
+        '200':
+          description: AI Prediction results returned
+
   /api/symptoms/history:
     get:
-      tags:
-        - symptoms
-      summary: Lấy lịch sử dự đoán bệnh
-      description: Chỉ hiển thị lịch sử của user hiện tại (yêu cầu token)
+      tags: [symptoms]
+      summary: Get user AI prediction history list
       security:
         - bearerAuth: []
       responses:
-        "200":
-          description: Trả về danh sách lịch sử dự đoán
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                  count:
-                    type: number
-                  data:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        _id:
-                          type: string
-                        inputSymptoms:
-                          type: array
-                          items:
-                            type: string
-                        diseaseName:
-                          type: string
-                        createdAt:
-                          type: string
-        "401":
-          description: Không có token hoặc token sai
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-        "500":
-          description: Lỗi server
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-  /api/diseases/search:
+        '200':
+          description: Prediction history returned
     post:
-      tags:
-        - diseases
-      summary: Tìm bệnh theo tên
-      description: Tìm bệnh bằng tên tiếng Việt, trả về id và tên tiếng Việt. Nếu user đã đăng nhập, lưu lịch sử tìm kiếm.
+      tags: [symptoms]
+      summary: Save a prediction result to history
       security:
         - bearerAuth: []
       requestBody:
@@ -609,298 +235,81 @@ paths:
           application/json:
             schema:
               type: object
+              required: [diseaseName, symptoms, accuracy]
               properties:
-                name:
-                  type: string
-                  description: Tên bệnh muốn tìm
+                diseaseName: { type: string }
+                symptoms: { type: array, items: { type: string } }
+                accuracy: { type: number }
       responses:
-        "200":
-          description: Kết quả tìm kiếm
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                  count:
-                    type: number
-                  data:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        _id:
-                          type: string
-                        name:
-                          type: string
-        "400":
-          description: Không có tên bệnh trong body
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                  count:
-                    type: number
-                  data:
-                    type: array
-        "500":
-          description: Lỗi server
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
+        '200':
+          description: History saved
+
+  # === DISEASES ===
+  /api/diseases/suggestions:
+    get:
+      tags: [diseases]
+      summary: Get autocomplete suggestions for disease names
+      responses:
+        '200':
+          description: Suggestion list returned
+
+  /api/diseases/search:
+    post:
+      tags: [diseases]
+      summary: Search diseases database with query filters
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [query]
+              properties:
+                query: { type: string }
+      responses:
+        '200':
+          description: Matching diseases list returned
 
   /api/diseases/detail/{id}:
     get:
-      tags:
-        - diseases
-      summary: Lấy chi tiết bệnh
-      description: Trả về thông tin chi tiết của bệnh, gồm triệu chứng, chẩn đoán, điều trị, bác sĩ, khoa, lời khuyên,...
+      tags: [diseases]
+      summary: Retrieve detailed info of a disease by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Disease object with precautions, treatments, etc.
+
+  /api/diseases/symptom/{id}:
+    get:
+      tags: [diseases]
+      summary: Retrieve symptom detailed information
       security:
         - bearerAuth: []
       parameters:
         - name: id
           in: path
           required: true
-          description: ID của bệnh
-          schema:
-            type: string
+          schema: { type: string }
       responses:
-        "200":
-          description: Thông tin chi tiết bệnh
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  _id:
-                    type: string
-                  name:
-                    type: string
-                  overview:
-                    type: string
-                  symptoms:
-                    type: array
-                    items:
-                      type: string
-                  causes:
-                    type: array
-                    items:
-                      type: string
-                  diagnosis:
-                    type: array
-                    items:
-                      type: string
-                  treatment:
-                    type: array
-                    items:
-                      type: string
-                  doctor:
-                    type: array
-                    items:
-                      type: string
-                  department:
-                    type: string
-                  Precaution_1:
-                    type: string
-                  Precaution_2:
-                    type: string
-                  Precaution_3:
-                    type: string
-                  Precaution_4:
-                    type: string
-                  image_url:
-                    type: string
-        "404":
-          description: Không tìm thấy bệnh
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-        "500":
-          description: Lỗi server
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
+        '200':
+          description: Symptom details returned
 
   /api/diseases/search/history:
     get:
-      tags:
-        - diseases
-      summary: Lấy lịch sử tìm kiếm
-      description: Chỉ hiển thị lịch sử tìm kiếm của user hiện tại. Yêu cầu đăng nhập.
-      security:
-        - bearerAuth: []
-      responses:
-        "200":
-          description: Trả về danh sách lịch sử tìm kiếm
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                  count:
-                    type: number
-                  data:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        _id:
-                          type: string
-                        diseaseName:
-                          type: string
-                        inputSymptoms:
-                          type: array
-                          items:
-                            type: string
-                        createdAt:
-                          type: string
-        "401":
-          description: Không có token hoặc token sai
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-        "500":
-          description: Lỗi server
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-  /api/admin/all:
-    get:
-      tags:
-        - admin
-      summary: Lấy tất cả bệnh
-      description: Trả về danh sách toàn bộ bệnh. Chỉ admin mới truy cập được.
-      security:
-        - bearerAuth: []
-      responses:
-        "200":
-          description: Danh sách bệnh
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  count:
-                    type: number
-                  diseases:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        _id:
-                          type: string
-                        name:
-                          type: string
-                        overview:
-                          type: string
-                        image_url:
-                          type: string
-                        diagnosis:
-                          type: array
-                          items:
-                            type: string
-                        symptoms:
-                          type: array
-                          items:
-                            type: string
-                        causes:
-                          type: array
-                          items:
-                            type: string
-                        treatment:
-                          type: array
-                          items:
-                            type: string
-                        doctors:
-                          type: array
-                          items:
-                            type: string
-                        departments:
-                          type: array
-                          items:
-                            type: string
-                        Precaution_1:
-                          type: string
-                        Precaution_2:
-                          type: string
-                        Precaution_3:
-                          type: string
-                        Precaution_4:
-                          type: string
-        "401":
-          description: Không có token
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-        "403":
-          description: Không phải admin
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-        "500":
-          description: Lỗi server
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-
-
-
-  /api/appointment/nearby-hospitals:
-    get:
-      tags:
-        - appointment
-      summary: Get nearby hospitals within 10km radius
+      tags: [diseases]
+      summary: Get user disease search history
       security:
         - bearerAuth: []
       responses:
         '200':
-          description: List of hospitals with calculated distances
-        '401':
-          description: Unauthorized
-
-  /api/appointment/book:
+          description: History list returned
     post:
-      tags:
-        - appointment
-      summary: Book a new medical appointment
+      tags: [diseases]
+      summary: Save a search query to user history
       security:
         - bearerAuth: []
       requestBody:
@@ -909,111 +318,133 @@ paths:
           application/json:
             schema:
               type: object
-              required:
-                - hospital_id
-                - doctor_id
-                - date
-                - time_slot
+              required: [query]
               properties:
-                hospital_id:
-                  type: integer
-                doctor_id:
-                  type: integer
-                date:
-                  type: string
-                  format: date
-                time_slot:
-                  type: string
-                symptoms:
-                  type: string
+                query: { type: string }
       responses:
         '200':
-          description: Appointment booked successfully
-        '400':
-          description: Validation error
+          description: Search history query saved
+
+  # === APPOINTMENTS & DOCTORS ===
+  /api/appointment/nearby-hospitals:
+    get:
+      tags: [appointment]
+      summary: Get nearby hospitals within 10km radius with distance calculation
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of nearby hospitals
+
+  /api/appointment/hospitals/{hospitalId}/doctors:
+    get:
+      tags: [appointment]
+      summary: Get doctors belonging to a hospital by department
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: hospitalId
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: List of doctors
+
+  /api/appointment/book:
+    post:
+      tags: [appointment]
+      summary: Create a medical booking appointment
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [hospital_id, doctor_id, date, time_slot]
+              properties:
+                hospital_id: { type: integer }
+                doctor_id: { type: integer }
+                date: { type: string, format: date }
+                time_slot: { type: string }
+                symptoms: { type: string }
+      responses:
+        '200':
+          description: Booking registered successfully
 
   /api/appointment/my-appointments:
     get:
-      tags:
-        - appointment
-      summary: Get current logged-in user appointments
+      tags: [appointment]
+      summary: View booking appointments history of current user
       security:
         - bearerAuth: []
       responses:
         '200':
-          description: List of user appointments
+          description: Appointments list returned
 
   /api/appointment/doctor-appointments:
     get:
-      tags:
-        - appointment
-      summary: Get logged-in doctor appointments
+      tags: [appointment]
+      summary: View assigned appointments for logged-in doctor
       security:
         - bearerAuth: []
       responses:
         '200':
-          description: List of doctor appointments
+          description: Doctor appointments list
 
   /api/appointment/{id}/status:
     put:
-      tags:
-        - appointment
-      summary: Update appointment status (confirm, cancel, complete)
+      tags: [appointment]
+      summary: Update booking appointment status
       security:
         - bearerAuth: []
       parameters:
         - name: id
           in: path
           required: true
-          schema:
-            type: integer
+          schema: { type: integer }
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required:
-                - status
+              required: [status]
               properties:
-                status:
-                  type: string
-                  enum: [pending, confirmed, cancelled, completed]
+                status: { type: string, enum: [pending, confirmed, cancelled, completed] }
       responses:
         '200':
-          description: Status updated successfully
+          description: Status updated
 
   /api/appointment/patient-health/{userId}:
     get:
-      tags:
-        - appointment
-      summary: Get complete health profile of a patient (Doctor only)
+      tags: [appointment]
+      summary: View full health record and history of a patient (Doctor only)
       security:
         - bearerAuth: []
       parameters:
         - name: userId
           in: path
           required: true
-          schema:
-            type: integer
+          schema: { type: integer }
       responses:
         '200':
-          description: Patient health history and details
+          description: Patient profile and previous treatments returned
 
   /api/appointment/doctor/profile:
     get:
-      tags:
-        - appointment
-      summary: Get doctor profile information
+      tags: [appointment]
+      summary: Get logged-in doctor profile details
       security:
         - bearerAuth: []
       responses:
         '200':
-          description: Doctor details
+          description: Doctor profile returned
     put:
-      tags:
-        - appointment
-      summary: Update doctor profile information
+      tags: [appointment]
+      summary: Update doctor profile metadata
       security:
         - bearerAuth: []
       requestBody:
@@ -1023,84 +454,411 @@ paths:
             schema:
               type: object
               properties:
-                specialization:
-                  type: string
-                experience_years:
-                  type: integer
-                description:
-                  type: string
+                specialization: { type: string }
+                experience_years: { type: integer }
+                description: { type: string }
       responses:
         '200':
-          description: Profile updated successfully
+          description: Doctor profile updated
 
   /api/appointment/{id}/treatment:
     put:
-      tags:
-        - appointment
-      summary: Update treatment information (diagnosis, prescription)
+      tags: [appointment]
+      summary: Update diagnosis and prescription for an appointment
       security:
         - bearerAuth: []
       parameters:
         - name: id
           in: path
           required: true
-          schema:
-            type: integer
+          schema: { type: integer }
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required:
-                - diagnosis
+              required: [diagnosis]
               properties:
-                diagnosis:
-                  type: string
-                prescription:
-                  type: string
+                diagnosis: { type: string }
+                prescription: { type: string }
       responses:
         '200':
-          description: Treatment saved successfully
+          description: Treatment saved
+
+  # === ICD CODES ===
+  /api/icd/search:
+    get:
+      tags: [icd]
+      summary: Search ICD-10 codes by query string
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: ICD results list
+
+  /api/icd/detail/{icdId}:
+    get:
+      tags: [icd]
+      summary: Get details of an ICD code
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: icdId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: ICD details returned
+
+  /api/icd/enrich/{diseaseName}:
+    get:
+      tags: [icd]
+      summary: Enrich a disease name with matching ICD-10 data
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: diseaseName
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Enriched ICD object
+
+  # === MEDICINES ===
+  /api/medicine:
+    get:
+      tags: [medicine]
+      summary: Search and list medicines in stock
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: q
+          in: query
+          schema: { type: string }
+      responses:
+        '200':
+          description: Medicine list returned
+    post:
+      tags: [medicine]
+      summary: Add a new medicine type (Admin only)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string }
+                description: { type: string }
+                stock: { type: integer }
+      responses:
+        '200':
+          description: Medicine registered
+
+  # === MEDICAL NEWS ===
+  /api/news:
+    get:
+      tags: [news]
+      summary: Get cached medical news feed articles
+      responses:
+        '200':
+          description: News articles returned
+
+  /api/news/refresh:
+    post:
+      tags: [news]
+      summary: Force refresh news feed articles from NewsData API (Admin only)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: News refreshed successfully
+
+  # === EPIDEMIOLOGICAL DASHBOARD ===
+  /api/dashboard/daily:
+    get:
+      tags: [dashboard]
+      summary: Retrieve epidemiological daily chart analytics counts
+      responses:
+        '200':
+          description: Statistical daily counts returned
+
+  # === ADMIN CONTROLS ===
+  /api/admin/all:
+    get:
+      tags: [admin]
+      summary: Get all diseases list in system (Admin only)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of diseases returned
+
+  /api/admin/disease/{id}:
+    get:
+      tags: [admin]
+      summary: Retrieve single disease info by ID for editing (Admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Disease details returned
 
   /api/admin/stats:
     get:
-      tags:
-        - admin
-      summary: Get system statistics dashboard overview
+      tags: [admin]
+      summary: Get system metrics stats overview (Admin only)
       security:
         - bearerAuth: []
       responses:
         '200':
-          description: Stats overview
+          description: Stat counts (users, doctors, bookings, etc.)
+
+  /api/admin/doctors:
+    get:
+      tags: [admin]
+      summary: List all doctor accounts (Admin only)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of doctors returned
+    post:
+      tags: [admin]
+      summary: Create a new doctor user profile (Admin only)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [first_name, last_name, Username, email, password]
+              properties:
+                first_name: { type: string }
+                last_name: { type: string }
+                Username: { type: string }
+                email: { type: string, format: email }
+                password: { type: string }
+      responses:
+        '200':
+          description: Doctor user created
+
+  /api/admin/doctors/{id}:
+    put:
+      tags: [admin]
+      summary: Update a doctor user details (Admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                first_name: { type: string }
+                last_name: { type: string }
+                phone: { type: string }
+      responses:
+        '200':
+          description: Doctor updated
+    delete:
+      tags: [admin]
+      summary: Delete/deactivate a doctor user (Admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Doctor deleted
+
+  /api/admin/hospitals:
+    get:
+      tags: [admin]
+      summary: List all registered hospitals (Admin only)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of hospitals returned
+    post:
+      tags: [admin]
+      summary: Add a new hospital registry manually (Admin only)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string }
+                phone: { type: string }
+                image_url: { type: string }
+                description: { type: string }
+      responses:
+        '200':
+          description: Hospital created
+
+  /api/admin/hospitals/{id}:
+    put:
+      tags: [admin]
+      summary: Update hospital registry metadata (Admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                phone: { type: string }
+                description: { type: string }
+      responses:
+        '200':
+          description: Hospital updated
+    delete:
+      tags: [admin]
+      summary: Remove a hospital registry (Admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Hospital deleted
 
   /api/admin/hospitals/sync-overpass:
     post:
-      tags:
-        - admin
-      summary: Fetch and sync hospitals data from Overpass API (OpenStreetMap)
+      tags: [admin]
+      summary: Fetch and sync hospitals data from Overpass API (Admin only)
       security:
         - bearerAuth: []
       responses:
         '200':
-          description: Sync completed successfully
+          description: Synced successfully
+
+  /api/admin/medicines:
+    get:
+      tags: [admin]
+      summary: List all medicines for warehouse tracking (Admin only)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of medicines returned
+    post:
+      tags: [admin]
+      summary: Create a new medicine entry (Admin only)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string }
+                description: { type: string }
+                stock: { type: integer }
+      responses:
+        '200':
+          description: Medicine entry created
+
+  /api/admin/medicines/{id}:
+    patch:
+      tags: [admin]
+      summary: Update stock quantity of a medicine (Admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [stock]
+              properties:
+                stock: { type: integer }
+      responses:
+        '200':
+          description: Medicine stock updated
+    delete:
+      tags: [admin]
+      summary: Remove a medicine entry (Admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Medicine deleted
+
+  /api/admin/appointments:
+    get:
+      tags: [admin]
+      summary: List all booking appointments across the system (Admin only)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of all appointments returned
 
   /api/admin/diseases/sync-auto:
     post:
-      tags:
-        - admin
-      summary: Trigger automatic disease prediction AI synchronization
+      tags: [admin]
+      summary: Trigger automatic disease prediction AI synchronization (Admin only)
       security:
         - bearerAuth: []
       responses:
         '200':
-          description: AI sync completed successfully
-
-  /api/dashboard/daily:
-    get:
-      tags:
-        - dashboard
-      summary: Retrieve daily epidemiological counts for charts
-      responses:
-        '200':
-          description: Daily disease statistics
+          description: AI sync executed successfully
