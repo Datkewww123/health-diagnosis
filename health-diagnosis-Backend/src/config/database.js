@@ -10,6 +10,11 @@ const sequelize = new Sequelize(
     dialect: 'mysql',
     logging: false, // Tắt log query SQL để tránh rối terminal
     timezone: '+07:00', // Khớp múi giờ Việt Nam
+    dialectOptions: {
+      ssl: {
+        rejectUnauthorized: false
+      }
+    },
     define: {
       timestamps: true,
       underscored: true, // dùng snake_case (created_at, updated_at) trong MySQL
