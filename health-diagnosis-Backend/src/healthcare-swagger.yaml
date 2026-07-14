@@ -11,7 +11,7 @@ servers:
   - url: http://localhost:3001
     description: Local development server
 
-  - url: https://health-diagnosis-backend.onrender.com
+  - url: https://health-diagnosis-0nx2.onrender.com
     description: Production server
 components:
   securitySchemes:
@@ -1237,3 +1237,225 @@ paths:
                     type: string
                   error:
                     type: string
+
+  /api/appointment/nearby-hospitals:
+    get:
+      tags:
+        - appointment
+      summary: Get nearby hospitals within 10km radius
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of hospitals with calculated distances
+        '401':
+          description: Unauthorized
+
+  /api/appointment/book:
+    post:
+      tags:
+        - appointment
+      summary: Book a new medical appointment
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - hospital_id
+                - doctor_id
+                - date
+                - time_slot
+              properties:
+                hospital_id:
+                  type: integer
+                doctor_id:
+                  type: integer
+                date:
+                  type: string
+                  format: date
+                time_slot:
+                  type: string
+                symptoms:
+                  type: string
+      responses:
+        '200':
+          description: Appointment booked successfully
+        '400':
+          description: Validation error
+
+  /api/appointment/my-appointments:
+    get:
+      tags:
+        - appointment
+      summary: Get current logged-in user appointments
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of user appointments
+
+  /api/appointment/doctor-appointments:
+    get:
+      tags:
+        - appointment
+      summary: Get logged-in doctor appointments
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of doctor appointments
+
+  /api/appointment/{id}/status:
+    put:
+      tags:
+        - appointment
+      summary: Update appointment status (confirm, cancel, complete)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - status
+              properties:
+                status:
+                  type: string
+                  enum: [pending, confirmed, cancelled, completed]
+      responses:
+        '200':
+          description: Status updated successfully
+
+  /api/appointment/patient-health/{userId}:
+    get:
+      tags:
+        - appointment
+      summary: Get complete health profile of a patient (Doctor only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Patient health history and details
+
+  /api/appointment/doctor/profile:
+    get:
+      tags:
+        - appointment
+      summary: Get doctor profile information
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Doctor details
+    put:
+      tags:
+        - appointment
+      summary: Update doctor profile information
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                specialization:
+                  type: string
+                experience_years:
+                  type: integer
+                description:
+                  type: string
+      responses:
+        '200':
+          description: Profile updated successfully
+
+  /api/appointment/{id}/treatment:
+    put:
+      tags:
+        - appointment
+      summary: Update treatment information (diagnosis, prescription)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - diagnosis
+              properties:
+                diagnosis:
+                  type: string
+                prescription:
+                  type: string
+      responses:
+        '200':
+          description: Treatment saved successfully
+
+  /api/admin/stats:
+    get:
+      tags:
+        - admin
+      summary: Get system statistics dashboard overview
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Stats overview
+
+  /api/admin/hospitals/sync-overpass:
+    post:
+      tags:
+        - admin
+      summary: Fetch and sync hospitals data from Overpass API (OpenStreetMap)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Sync completed successfully
+
+  /api/admin/diseases/sync-auto:
+    post:
+      tags:
+        - admin
+      summary: Trigger automatic disease prediction AI synchronization
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: AI sync completed successfully
+
+  /api/dashboard/daily:
+    get:
+      tags:
+        - dashboard
+      summary: Retrieve daily epidemiological counts for charts
+      responses:
+        '200':
+          description: Daily disease statistics
