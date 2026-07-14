@@ -16,4 +16,5 @@ router.post('/logout', auth.logout);// path de logout
 router.post('/forgotpassword', auth.forgotpassword); // khi quen mat khau
 router.post('/verifyOtp', auth.verifyOtp); // xac thuc otp
 router.post('/resetpassword', auth.resetpassword); // resetpassword
+router.post('/google-login', auth.googleLogin);
 module.exports = router; //xuat router ra ngoai de file khac su dung

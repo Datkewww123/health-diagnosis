@@ -5,6 +5,8 @@ import { login as loginApi } from "../api/auth";
 import { syncSearchHistoryToServer, syncPredictHistoryToServer } from "../api/history";
 import { useAuth } from "../hooks/useAuth";
 import { useToast } from "../context/ToastContext";
+import { GoogleLogin } from "@react-oauth/google";
+import { postRequest } from "../api/client";
 
 function decodeJWT(token: string) {
   try {
@@ -36,6 +38,56 @@ export default function Login({ onSuccess }: LoginProps) {
   
   // State quản lý chế độ đăng nhập: 'user' | 'doctor' | 'admin'
   const [loginMode, setLoginMode] = useState<'user' | 'doctor' | 'admin'>('user');
+
+  async function handleGoogleSuccess(credentialResponse: any) {
+    if (!credentialResponse.credential) {
+      toast.error("Không nhận được thông tin đăng nhập Google!");
+      return;
+    }
+
+    setLoading(true);
+    setFormError(null);
+    try {
+      // Gửi Google credential lên backend
+      const data = await postRequest("/api/auth/google-login", {
+        credential: credentialResponse.credential
+      });
+
+      if (data && data.token) {
+        let roleValue = data.role || data.user?.role;
+        if (!roleValue) {
+          const decoded = decodeJWT(data.token);
+          roleValue = decoded?.role;
+        }
+        roleValue = (roleValue || "user").toString().trim().toLowerCase();
+
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("role", roleValue);
+        localStorage.setItem("user", JSON.stringify(data.user || { Username: data.user?.Username || "Google User" }));
+
+        setAuthLogin(data.token, data.user || { Username: data.user?.Username || "Google User" }, roleValue);
+
+        toast.success("Đăng nhập bằng tài khoản Google thành công!");
+
+        console.log("[GOOGLE LOGIN] Starting history sync...");
+        Promise.all([syncSearchHistoryToServer(), syncPredictHistoryToServer()])
+          .then(() => console.log("[GOOGLE LOGIN] History synced successfully!"))
+          .catch((e) => console.error("[GOOGLE LOGIN] History sync failed:", e));
+
+        if (roleValue === "doctor") {
+          navigate("/doctor/dashboard");
+        } else {
+          navigate("/profile");
+        }
+      }
+    } catch (err: any) {
+      console.error("[Google Auth Error]:", err);
+      setFormError(err.message || "Xác thực đăng nhập Google thất bại!");
+      toast.error(err.message || "Đăng nhập Google thất bại!");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -222,6 +274,31 @@ export default function Login({ onSuccess }: LoginProps) {
             <span>{loading ? "Đang đăng nhập..." : "Đăng nhập"}</span>
           </button>
         </form>
+
+        {/* Nút đăng nhập bằng Google */}
+        {loginMode === 'user' && (
+          <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-white dark:bg-slate-900 px-3 text-slate-400 font-bold">Hoặc đăng nhập với</span>
+            </div>
+            
+            <div className="flex justify-center w-full">
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={() => {
+                  toast.error("Đăng nhập bằng tài khoản Google thất bại!");
+                }}
+                useOneTap
+                theme="filled_blue"
+                shape="pill"
+                size="large"
+                locale="vi"
+                text="signin_with"
+                width="100%"
+              />
+            </div>
+          </div>
+        )}
 
         {/* Footer Link */}
         {loginMode === 'user' && (

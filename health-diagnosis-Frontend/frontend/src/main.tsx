@@ -2,6 +2,7 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./styles.css";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 
 // Global error handlers to surface runtime errors (helps debug blank page in production)
 window.addEventListener("error", (ev) => {
@@ -36,9 +37,18 @@ function mountApp() {
   }
   try {
     const root = createRoot(container);
+    // Lấy Google Client ID từ biến môi trường của Vite
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
+    
     root.render(
       <React.StrictMode>
-        <App />
+        {clientId ? (
+          <GoogleOAuthProvider clientId={clientId}>
+            <App />
+          </GoogleOAuthProvider>
+        ) : (
+          <App />
+        )}
       </React.StrictMode>
     );
   } catch (err: any) {

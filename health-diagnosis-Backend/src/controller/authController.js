@@ -325,6 +325,92 @@ class AuthController {
       res.status(500).json({ message: "Lỗi máy chủ khi đặt lại mật khẩu" });
     }
   }
+
+  // Đăng nhập bằng Google
+  async googleLogin(req, res) {
+    try {
+      const { credential } = req.body;
+      if (!credential) {
+        return res.status(400).json({ message: "Mã xác thực Google không hợp lệ!" });
+      }
+
+      const { OAuth2Client } = require('google-auth-library');
+      // Sử dụng Client ID vừa lấy từ .env
+      const client = new OAuth2Client(process.env.VITE_GOOGLE_CLIENT_ID);
+
+      const ticket = await client.verifyIdToken({
+        idToken: credential,
+        audience: process.env.VITE_GOOGLE_CLIENT_ID,
+      });
+      const payload = ticket.getPayload();
+      if (!payload) {
+        return res.status(400).json({ message: "Xác thực token Google thất bại!" });
+      }
+
+      const { email, sub, given_name, family_name, picture } = payload;
+
+      // 1. Kiểm tra xem email đã tồn tại chưa
+      let user = await User.findOne({ where: { email } });
+
+      // 2. Nếu chưa có user thì tự động tạo tài khoản mới
+      if (!user) {
+        // Tạo username ngẫu nhiên từ email
+        const baseUsername = email.split('@')[0];
+        let finalUsername = baseUsername;
+        let userExists = await User.findOne({ where: { username: finalUsername } });
+        let suffix = 1;
+        while (userExists) {
+          finalUsername = `${baseUsername}${suffix}`;
+          userExists = await User.findOne({ where: { username: finalUsername } });
+          suffix++;
+        }
+
+        // Tạo password ngẫu nhiên và hash
+        const tempPassword = crypto.randomBytes(16).toString('hex');
+        const hash = await bcrypt.hash(tempPassword, 10);
+
+        user = await User.create({
+          first_name: given_name || 'Người dùng',
+          last_name: family_name || 'Google',
+          username: finalUsername,
+          email,
+          password: hash,
+          phone: '',
+          address: '29 Phù Thọ Hòa, Phường Phú Thọ Hòa, Quận Tân Phú, Thành phố Hồ Chí Minh', // Vị trí mặc định
+          latitude: 10.7769,
+          longitude: 106.7009
+        });
+      }
+
+      // 3. Ký Token JWT gửi về
+      const token = jwt.sign(
+        { userId: user.id, role: user.role },
+        getJwtSecret(),
+        { expiresIn: "1d" }
+      );
+
+      return res.status(200).json({
+        token,
+        role: user.role,
+        user: {
+          id: user.id,
+          First_name: user.first_name,
+          Last_name: user.last_name,
+          Username: user.username,
+          email: user.email,
+          address: user.address,
+          latitude: user.latitude,
+          longitude: user.longitude,
+          role: user.role,
+          hospital_id: user.hospital_id || null
+        }
+      });
+
+    } catch (err) {
+      console.error('[Google Login Backend Error]:', err);
+      return res.status(500).json({ message: "Xác thực đăng nhập Google thất bại!" });
+    }
+  }
 }
 
 module.exports = new AuthController();
