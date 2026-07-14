@@ -276,7 +276,7 @@ export default function Login({ onSuccess }: LoginProps) {
         </form>
 
         {/* Nút đăng nhập bằng Google */}
-        {loginMode === 'user' && (
+        {loginMode === 'user' && import.meta.env.VITE_GOOGLE_CLIENT_ID && (
           <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
             <div className="relative flex justify-center text-xs uppercase">
               <span className="bg-white dark:bg-slate-900 px-3 text-slate-400 font-bold">Hoặc đăng nhập với</span>
