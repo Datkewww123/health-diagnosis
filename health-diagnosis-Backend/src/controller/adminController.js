@@ -711,6 +711,18 @@ class AdminController {
       return res.status(500).json({ message: "Lỗi hệ thống khi lấy danh sách lịch hẹn" });
     }
   }
+
+  // Đồng bộ danh sách bệnh viện từ Overpass API
+  async syncHospitalsFromOverpass(req, res) {
+    try {
+      const initializeHospitals = require('../../scripts/initializeHospitals');
+      await initializeHospitals();
+      return res.json({ message: "Đồng bộ danh sách bệnh viện từ Overpass API thành công!" });
+    } catch (err) {
+      console.error('[Sync Overpass] Error:', err);
+      return res.status(500).json({ message: "Lỗi đồng bộ danh sách bệnh viện" });
+    }
+  }
 }
 
 module.exports = new AdminController();

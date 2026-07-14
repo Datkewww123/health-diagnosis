@@ -30,6 +30,7 @@ const validateBody = (requiredFields) => (req, res, next) => {
     router.post('/hospitals', verifyToken, isAdmin, validateBody(['name']), adminController.createHospital);
     router.put('/hospitals/:id', verifyToken, isAdmin, adminController.updateHospital);
     router.delete('/hospitals/:id', verifyToken, isAdmin, adminController.deleteHospital);
+    router.post('/hospitals/sync-overpass', verifyToken, isAdmin, adminController.syncHospitalsFromOverpass);
 
     // Kho thuốc
     router.get('/medicines', verifyToken, isAdmin, adminController.getAllMedicines);

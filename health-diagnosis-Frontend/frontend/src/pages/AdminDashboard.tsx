@@ -61,6 +61,7 @@ export default function AdminDashboard() {
   const [medSearch, setMedSearch] = useState("");
   const MED_PAGE_SIZE = 15;
   const [syncingAI, setSyncingAI] = useState(false);
+  const [syncingHospitals, setSyncingHospitals] = useState(false);
   const [appointments, setAppointments] = useState<any[]>([]);
   const [appPage, setAppPage] = useState(1);
   const [appTotalPages, setAppTotalPages] = useState(1);
@@ -139,6 +140,21 @@ export default function AdminDashboard() {
       toast.error("Không thể lấy danh sách bệnh viện");
     } finally {
       setLoadingHospitals(false);
+    }
+  };
+
+  const handleSyncOverpass = async () => {
+    if (syncingHospitals) return;
+    setSyncingHospitals(true);
+    toast.info("Đang kết nối tới Overpass API để đồng bộ dữ liệu bệnh viện y tế...");
+    try {
+      await postRequest("/api/admin/hospitals/sync-overpass");
+      toast.success("Đồng bộ danh sách bệnh viện thành công!");
+      await fetchHospitals();
+    } catch (e: any) {
+      toast.error(e.message || "Không thể đồng bộ danh sách bệnh viện từ Overpass");
+    } finally {
+      setSyncingHospitals(false);
     }
   };
 
@@ -699,7 +715,15 @@ export default function AdminDashboard() {
         {/* --- TAB 3: HOSPITALS --- */}
         {activeTab === 'hospitals' && (
           <div className="space-y-4">
-            <div className="flex justify-end">
+            <div className="flex justify-end gap-3">
+              <button 
+                onClick={handleSyncOverpass}
+                disabled={syncingHospitals}
+                className="bg-sky-600 hover:bg-sky-700 disabled:opacity-50 text-white font-bold text-xs flex items-center gap-1.5 px-4 py-2.5 rounded-xl shadow-md cursor-pointer transition-all"
+              >
+                <RefreshCw className={`h-4 w-4 ${syncingHospitals ? "animate-spin" : ""}`} /> 
+                <span>{syncingHospitals ? "Đang đồng bộ..." : "Cập nhật từ Overpass API"}</span>
+              </button>
               <button 
                 onClick={() => setShowHospitalModal(true)}
                 className="bg-purple-600 hover:bg-purple-750 text-white font-bold text-xs flex items-center gap-1.5 px-4 py-2.5 rounded-xl shadow-md cursor-pointer transition-all"
