@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { ToastProvider } from "./context/ToastContext";
@@ -49,6 +49,29 @@ const AdminRoute = () => {
 };
 
 export default function App() {
+  // Ép buộc toàn hệ thống chạy Light Mode ở mức độ cao nhất
+  useEffect(() => {
+    const root = window.document.documentElement;
+    root.classList.remove("dark");
+    root.classList.add("light");
+    localStorage.setItem("theme", "light");
+
+    // Lắng nghe sự thay đổi của class để tránh bị ghi đè bởi thư viện khác
+    const observer = new MutationObserver(() => {
+      if (root.classList.contains("dark")) {
+        root.classList.remove("dark");
+        root.classList.add("light");
+      }
+    });
+
+    observer.observe(root, {
+      attributes: true,
+      attributeFilter: ["class"]
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <BrowserRouter
       future={{
